@@ -1,0 +1,105 @@
+div.ccm-page {
+  main {
+
+    // ensure that what you're putting in here is large and in charge
+    .jumbo {
+      h1 {
+        .title-thin;
+        padding-top: 40px;
+        font-size: @title-thin-type-font-size * 1.5;
+        padding-bottom: 40px;
+      }
+
+      p {
+        font-size: @h2-type-font-size;
+        color: @h4-type-color;
+        font-weight: 200;
+      }
+
+      min-height: 300px;
+    }
+  }
+}
+
+/* comes outside of main because we want to show it in redactor */
+.title-thin {
+  color: @title-thin-type-color !important;
+  font-family: @title-thin-type-font-family !important;
+  font-size: @title-thin-type-font-size !important;
+  line-height: (@line-height-base * .8);
+  font-weight: 200 !important;
+  display: block
+}
+.page-title{
+  color: #fff !important;
+  font-weight: 600 !important;
+  text-shadow: 2px 2px #777879 !important;
+  text-transform: uppercase !important;
+  font-size: 30px !important;
+  font-family: 'Montserrat', sans-serif !important;
+}
+.title-caps-bold {
+  color: @title-caps-type-color !important;
+  font-family: @title-caps-type-font-family !important;
+  font-size: @title-caps-type-font-size !important;
+  line-height: @title-caps-type-font-size * @line-height-base !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  margin-top: 0;
+}
+h3.title-caps-bold{
+  font-size: 25px !important;
+}
+.title-caps {
+  color: @title-caps-type-color !important;
+  font-family: @title-caps-type-font-family !important;
+  font-size: @title-caps-type-font-size !important;
+  line-height: @title-caps-type-font-size * @line-height-base !important;
+  font-weight: 300;
+  text-transform: uppercase;
+}
+
+.image-caption {
+  font-family: @image-caption-type-font-family;
+  color: @image-caption-type-color;
+  font-size: @image-caption-type-font-size;
+  @image-caption-type-font-style: 'italic';
+}
+
+.heading-bg{
+
+  padding: 30px 0 15px 50px;
+  margin-bottom: 15px;
+  line-height: 1;
+  color: #ff530d;
+  text-transform: uppercase;
+  font-weight: 900;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 30px;
+  position: relative;
+  z-index: 1;
+
+  &:before{
+    content: '';
+    width: 38%;
+    height: 0px;
+    position: absolute;
+    left: 18px;
+    z-index: -1;
+    top: 6px;
+    width: 124px;
+    height: 55px;
+    transform: skew(150deg);
+    background: #fff;
+    border: 2px solid;
+  }
+}
+
+h3.porto-title{
+  font-size: 20px !important;
+  font-weight: 400 !important;
+  color: #1d2127 !important;
+  line-height: 24px !important;
+  font-family: 'Montserrat', sans-serif !important;
+  margin: 0 !important;
+}

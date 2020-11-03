@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.concrete5.org/doctrine-xml/0.5">
+	<table name="btScrollToTop">
+		<field name="bID" type="integer">
+			<unsigned />
+			<key />
+		</field>
+		<field name="theme_id" type="integer">
+			<unsigned />
+			<default value="1" />
+		</field>
+		<field name="icon" type="integer">
+			<unsigned />
+			<default value="0" />
+		</field>
+		
+		<field name="size" type="integer">
+			<unsigned />
+			<default value="82" />
+		</field>
+		<field name="width" type="integer">
+			<unsigned />
+			<default value="82" />
+		</field>
+		<field name="width_px" type="boolean">
+			<default value="1" />
+			<notnull />
+		</field>
+		<field name="height" type="integer">
+			<unsigned />
+			<default value="82" />
+		</field>
+		<field name="height_px" type="boolean">
+			<default value="1" />
+			<notnull />
+		</field>
+		<field name="opacity" type="integer">
+			<unsigned />
+			<default value="95" />
+		</field>
+		<field name="left_right" type="boolean">
+			<default value="1" />
+			<notnull />
+		</field>
+		<field name="pos_left" type="integer">
+			<unsigned />
+			<default value="90" />
+		</field>
+		<field name="top_bottom" type="boolean">
+			<default value="1" />
+			<notnull />
+		</field>
+		<field name="pos_top" type="integer">
+			<unsigned />
+			<default value="90" />
+		</field>
+		<field name="radius" type="integer">
+			<unsigned />
+			<default value="50" />
+		</field>
+		<field name="font_size" type="integer">
+			<unsigned />
+			<default value="52" />
+		</field>
+		<field name="color" type="string" size="32">
+			<default value="#000000" />
+		</field>
+		<field name="hover_color" type="string" size="32">
+			<default value="#666666" />
+		</field>
+		<field name="font_color" type="string" size="32">
+			<default value="#ffffff" />
+		</field>
+		<field name="caption" type="string" size="64">
+			<default value="Home" />
+		</field>
+	</table>
+</schema>

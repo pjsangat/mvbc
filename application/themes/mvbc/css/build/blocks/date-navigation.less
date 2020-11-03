@@ -1,0 +1,46 @@
+div.col-sidebar {
+  div.ccm-block-date-navigation-wrapper {
+    margin: 25px 0px;
+    font-size: .85em;
+  }
+}
+
+div.ccm-block-date-navigation-header {
+  h5{
+    font-size: 18px;
+    color: #333;
+  }
+}
+
+ul.ccm-block-date-navigation-dates {
+  list-style-type: none;
+  padding-left: 0px;
+  padding-bottom: 0px;
+
+  li {
+    margin-bottom: 5px;
+
+    &:before{
+      font-weight: 200;
+      display: inline-block;
+      margin-right: 10px;
+      font-family: FontAwesome;
+      font-size: 12px;
+      text-rendering: auto;
+      content: "\f054";
+      color: #f35124;
+    }
+    a{
+      color: #777777 !important;
+      &:hover {
+        text-decoration: none;
+        color: #f35124 !important;
+      }
+    }
+  }
+}
+
+.ccm-block-date-navigation-date-selected {
+  font-weight: bold;
+}
+

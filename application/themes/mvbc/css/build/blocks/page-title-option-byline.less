@@ -1,0 +1,130 @@
+div.ccm-block-page-title-byline {
+
+  padding-bottom: 15px;
+  border-bottom: 1px solid @content-section-divider-color;
+  margin-bottom: 15px;
+
+
+  h1.page-title {
+    .make-heading(@h1-type-font-family, @h1-type-font-size, @h1-type-font-weight, @h1-type-color);
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+    padding-top: 0px;
+    font-size: 25px !important;
+    color: #333 !important;
+    text-shadow: 2px 2px #efefef !important;
+  }
+
+  span.page-date {
+    margin-right: 2em;
+    color: @h5-type-color;
+    // font-style: italic;
+    font-size: 0.85em;
+    &:before{
+      font-weight: 200;
+      display: inline-block;
+      margin-right: 1px;
+      font-family: FontAwesome;
+      font-size: 12px;
+      text-rendering: auto;
+      content: "\f073";
+      color: #f35124;
+    }
+  }
+
+  span.page-author {
+
+    &:before{
+      font-weight: 200;
+      display: inline-block;
+      margin-right: 1px;
+      font-family: FontAwesome;
+      font-size: 12px;
+      text-rendering: auto;
+      content: "\f007";
+      color: #f35124;
+    }
+  }
+}
+
+
+.block-social-media-links{
+  position: relative;
+  margin: 25px 0;
+
+  &:before{
+    font-weight: 200;
+    display: inline-block;
+    margin-right: 1px;
+    font-family: FontAwesome;
+    font-size: 14px;
+    text-rendering: auto;
+    content: "\f064";
+    color: #f35124;
+  }
+
+  &:after{
+    font-weight: 200;
+    display: inline-block;
+    text-rendering: auto;
+    content: "Share this post";
+    position: absolute;
+    top: 0;
+    left: 20px;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .ccm-block-share-this-page{
+    ul{
+      margin: 10px 0 0 0;
+      li{
+        padding: 0;
+        a{
+          color: #fff;
+          text-align: center;
+        }
+        a[aria-label="Facebook"]{
+          padding: 5px 10px;
+          background-color: #3b5a9a;
+          border: 1px solid #3b5a9a;
+
+          &:hover{
+            color: #3b5a9a;
+            background-color: #fff;
+          }
+        }
+
+        a[aria-label="Twitter"]{
+          padding: 5px 7.5px;
+          background-color: #1aa9e1;
+          border: 1px solid #1aa9e1;
+          &:hover{
+            color: #1aa9e1;
+            background-color: #fff;
+          }
+        }
+
+        a[aria-label="LinkedIn"]{
+          padding: 5px 8px;
+          background-color: #0073b2;
+          border: 1px solid #0073b2;
+          &:hover{
+            color: #0073b2;
+            background-color: #fff;
+          }
+        }
+
+        a[aria-label="Email"]{
+          padding: 5px 7px;
+          background-color: #dd4b39;
+          border: 1px solid #dd4b39;
+          &:hover{
+            color: #dd4b39;
+            background-color: #fff;
+          }
+        }
+      }
+    }
+  }
+}

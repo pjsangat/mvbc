@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<themes>
+	<theme>
+	    <name value="Round Button" />
+	    <icon value="0" />
+		<size value="82" />
+		<width value="82" />
+		<width_px value="1" />
+		<height value="82" />
+		<height_px value="1" />
+		<opacity value="95" />
+		<left_right value="0" />
+		<pos_left value="20" />
+		<top_bottom value="0" />
+		<pos_top value="20" />
+		<radius  value="50" />
+		<font_size value="52" />
+		<color value="#000000" />
+		<hover_color value="#666666" />
+		<font_color value="#ffffff" />
+		<caption  value="Home" />
+	</theme>
+	<theme>
+	    <name value="Square Button" />
+	    <icon value="4" />
+		<size value="82" />
+		<width value="82" />
+		<width_px value="1" />
+		<height value="32" />
+		<height_px value="1" />
+		<opacity value="80" />
+		<left_right value="0" />
+		<top_bottom value="0" />
+		<pos_left value="20" />
+		<pos_top value="20" />
+		<radius  value="2" />
+		<font_size value="18" />
+		<color value="#6770ff" />
+		<hover_color value="#0d44ff" />
+		<font_color value="#ffffff" />
+		<caption  value="Home" />
+	</theme>
+	<theme>
+	    <name value="Full Height Left Side Button" />
+	    <icon value="3" />
+		<size value="82" />
+		<width value="50" />
+		<width_px value="1" />
+		<height value="100" />
+		<height_px value="0" />
+		<opacity value="70" />
+		<left_right value="1" />
+		<top_bottom value="1" />
+		<pos_left value="0" />
+		<pos_top value="0" />
+		<radius  value="0" />
+		<font_size value="52" />
+		<color value="#808080" />
+		<hover_color value="#666666" />
+		<font_color value="#ffffff" />
+		<caption  value="Home" />
+	</theme>
+	<theme>
+	    <name value="Black Round Button" />
+	    <icon value="3" />
+		<size value="82" />
+		<width value="82" />
+		<width_px value="1" />
+		<height value="82" />
+		<height_px value="1" />
+		<opacity value="85" />
+		<left_right value="0" />
+		<top_bottom value="0" />
+		<pos_left value="20" />
+		<pos_top value="20" />
+		<radius  value="50" />
+		<font_size value="40" />
+		<color value="#000000" />
+		<hover_color value="#000000" />
+		<font_color value="#ffffff" />
+		<caption  value="Home" />
+	</theme>
+	<theme>
+	    <name value="Full Width Bottom Button" />
+	    <icon value="3" />
+		<size value="82" />
+		<width value="100" />
+		<width_px value="0" />
+		<height value="50" />
+		<height_px value="1" />
+		<opacity value="60" />
+		<left_right value="1" />
+		<top_bottom value="0" />
+		<pos_left value="0" />
+		<pos_top value="0" />
+		<radius  value="0" />
+		<font_size value="40" />
+		<color value="#787878" />
+		<hover_color value="#767676" />
+		<font_color value="#ffffff" />
+		<caption  value="Home" />
+	</theme>
+	<theme>
+	    <name value="Left Size Big Button" />
+	    <icon value="3" />
+		<size value="0" />
+		<width value="100" />
+		<width_px value="1" />
+		<height value="100" />
+		<height_px value="0" />
+		<opacity value="10" />
+		<left_right value="1" />
+		<top_bottom value="0" />
+		<pos_left value="0" />
+		<pos_top value="0" />
+		<radius  value="0" />
+		<font_size value="52" />
+		<color value="#000000" />
+		<hover_color value="#cacaca" />
+		<font_color value="#fdfdfd" />
+		<caption  value="Home" />
+	</theme>
+	<theme>
+	    <name value="Small Square Button" />
+	    <icon value="1" />
+		<size value="32" />
+		<width value="32" />
+		<width_px value="1" />
+		<height value="32" />
+		<height_px value="1" />
+		<opacity value="80" />
+		<left_right value="0" />
+		<top_bottom value="0" />
+		<pos_left value="20" />
+		<pos_top value="20" />
+		<radius  value="2" />
+		<font_size value="18" />
+		<color value="#6770ff" />
+		<hover_color value="#0d44ff" />
+		<font_color value="#ffffff" />
+		<caption  value="Home" />
+	</theme>	
+</themes>

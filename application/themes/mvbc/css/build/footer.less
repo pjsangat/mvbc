@@ -1,0 +1,220 @@
+footer#footer-theme {
+  border-top: 2px solid #ff530d;
+  color: #fff;
+  background: url(http://localhost/mvbc/application/files/5216/0361/7799/Layer-131.png) center center no-repeat;
+  background-size: cover;
+  padding: 0px 0 60px;
+  font-size: .85em;
+
+  // a {
+  //   color: @footer-link-color;
+  //   &:hover {
+  //     color: @footer-link-hover-color;
+  //   }
+  // }
+
+  // color: @footer-text-color;
+  .col-sm-3{
+    margin-top: 60px;
+    @media (max-width: 767px) {
+      margin-top: 30px;
+    }
+  }
+  .contact-container{
+    padding-left: 55px;
+    margin-bottom: 35px;
+    position: relative;
+
+    &:before{
+      content: "\f095";
+      display: inline-block;
+      font: normal normal normal 14px/1 FontAwesome;
+      font-size: inherit;
+      text-rendering: auto;
+      -webkit-font-smoothing: antialiased;
+      color: #ff530d;
+      position: absolute;
+      left: 0;
+      font-size: 37px;
+    }
+  }
+  .email-container{
+    padding-left: 55px;
+    margin-bottom: 35px;
+    position: relative;
+
+    &:before{
+      content: "\f2b7";
+      display: inline-block;
+      font: normal normal normal 14px/1 FontAwesome;
+      font-size: inherit;
+      text-rendering: auto;
+      -webkit-font-smoothing: antialiased;
+      color: #ff530d;
+      position: absolute;
+      left: 0;
+      font-size: 37px;
+    }
+
+  }
+  .location-container{
+    padding-left: 40px;
+    margin-bottom: 35px;
+    position: relative;
+
+    &:before{
+      content: "\f041";
+      display: inline-block;
+      font: normal normal normal 14px/1 FontAwesome;
+      font-size: inherit;
+      text-rendering: auto;
+      -webkit-font-smoothing: antialiased;
+      color: #ff530d;
+      position: absolute;
+      left: 0;
+      font-size: 37px;
+    }
+  }
+
+
+
+  a{
+    color: #fff;
+    &:hover{
+      background: none;
+    }
+  }
+
+  .nav{
+    margin-top: 30px;
+    li{
+      &:before{
+        color: #ff530d;
+        content: "\f105";
+        font-weight: 900;
+        -webkit-font-smoothing: antialiased;
+        margin-left: -11px;
+        margin-right: 6px;
+        font-size: .45rem;
+        opacity: .7;
+        display: inline-block;
+        font: normal normal normal 14px/1 FontAwesome;
+        text-rendering: auto;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      padding: 6px 0 6px 15px;
+      border-bottom: 1px solid #dadada30;
+
+      a{
+        display: inline-block;
+        color: #fff;
+        text-transform: uppercase;
+        padding: 0;
+        font-size: 13px;
+      }
+    }
+  }
+
+  div.ccm-block-social-links {
+    text-align: right;
+    ul {
+      a {
+        color: @footer-social-icon-color;
+
+        &:hover {
+          color: @footer-social-icon-hover-color;
+        }
+      }
+    }
+  }
+  
+  img#footer-logo{
+    margin-left: -60px;
+  }
+  h3{
+    color: #fff;
+    font-weight: normal;
+    font-size: 19px;
+    margin: 0 0 25px;
+  }
+  p{
+    margin: 0;
+    span.schedule{
+      display: inline-block;
+      margin-right: 10px;
+      min-width: 73px;
+      &:after{
+        color: #fff;
+        content: ":";
+        display: block;
+        float: right;
+      }
+    }
+  }
+  p.legal-text{
+    line-height: 24px;
+  }
+  // section {
+  //   border-top: 1px solid @footer-section-divider-color;
+  //   padding-top: 30px;
+  //   padding-bottom: 30px;
+  // }
+
+  // section:first-child {
+  //   // background-color: @footer-top-background-color;
+  // }
+
+  // section:last-child {
+  //   padding-bottom: 30px;
+  //   // background-color: @footer-bottom-background-color;
+  // }
+
+  #footer-site-title {
+    font-family: @footer-site-title-type-font-family;
+    font-weight: @footer-site-title-type-font-weight;
+    color: @footer-site-title-type-color;
+    text-transform: @footer-site-title-type-text-transform;
+    font-size: @footer-site-title-type-font-size;
+    .transition(color 0.2s linear);
+
+    &:hover {
+      color: darken(@header-site-title-type-color, 20%);
+      text-decoration: none !important;
+    }
+  }
+}
+
+footer#concrete5-brand {
+  background-color: #1b4656;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  color: #fff;
+  text-align: center;
+  border-top: 1px solid #53585e;
+  font-size: 13px;
+
+  
+  a.concrete5 {
+    color: #00baff;
+
+    &:hover {
+      color: #008dc0;
+    }
+  }
+
+  a {
+    color: #9fa7aa;
+
+    &:hover {
+      color: #7B8083;
+    }
+  }
+
+
+  #ccm-account-menu {
+    right: 80px;
+    top: -10px;
+  }
+}
+

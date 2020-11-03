@@ -1,0 +1,55 @@
+div.col-sidebar {
+  div.ccm-block-topic-list-wrapper {
+    margin: 25px 0px;
+    font-size: .85em;
+  }
+}
+
+div.ccm-block-topic-list-header {
+
+  h5{
+    font-size: 18px;
+    color: #333;
+  }
+}
+
+ul.ccm-block-topic-list-list ul {
+  margin-top: (@line-height-computed / 2);
+}
+
+// Topic List Displaying Topics of the Current Page
+ul.ccm-block-topic-list-page-topics {
+  list-style-type: none;
+  padding-left: 0px;
+  padding-bottom: 0px;
+
+  li {
+    margin-bottom: (@line-height-computed / 2); // matches bootstrap paragraph height
+    padding-bottom: 0px;
+
+    a {
+      color: #777777 !important;
+      &:hover {
+        text-decoration: none;
+        color: #f35124 !important;
+      }
+    }
+    
+    &:before{
+      font-weight: 200;
+      display: inline-block;
+      margin-right: 10px;
+      font-family: FontAwesome;
+      font-size: 12px;
+      text-rendering: auto;
+      content: "\f054";
+      color: #f35124;
+    }
+  }
+
+}
+
+.ccm-block-topic-list-topic-selected {
+  font-weight: bold;
+}
+

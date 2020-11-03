@@ -1,0 +1,31 @@
+.panel{
+    background-color: transparent;
+}
+.panel-default>.panel-heading{
+    padding: 0;
+    background-color: transparent;
+}
+.panel-group .panel{
+    border: none;
+    border-radius: 0;
+}
+.panel-heading a{
+    padding: 10px 0;
+    display: block;
+}
+.panel-title{
+    margin-bottom: 0;
+    font-size: 14px !important;
+    color: #3f5765 !important;
+    padding: 0;
+}
+
+.panel-title:hover{
+    color: #e43f1d !important;
+}
+
+.panel-title .fa{
+    color: #e43f1d;
+    margin-right: 10px;
+}
+

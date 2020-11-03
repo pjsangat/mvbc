@@ -1,0 +1,38 @@
+.btn {
+  .border-radius(20px);
+  padding: 10px 30px 10px 30px;
+}
+
+.btn-success {
+  .button-variant(@btn-success-color, #00cc66, @btn-success-border);
+}
+
+.btn-default {
+  // .button-variant(@body-type-color, @page-background-color, @default-button-border-color);
+  background: #6f818b;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 14px;
+  border-radius: 7px;
+  padding: 7px 15px;
+  border: 1px solid #6f818b;
+  &:hover{
+    background: #fff;
+    color: #6f818b;
+  }
+}
+
+.btn-secondary {
+  // .button-variant(@body-type-color, @page-background-color, @default-button-border-color);
+  background: #ff530d;
+  color: #ffffff;
+  font-weight: bold;
+  border: 1px solid #ff530d;
+  font-size: 14px;
+  border-radius: 7px;
+  padding: 7px 15px;
+  &:hover{
+    background: #fff;
+    color: #ff530d;
+  }
+}

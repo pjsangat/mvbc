@@ -1,0 +1,47 @@
+.scrollup {
+    position: fixed;
+    z-index: 1000;
+}
+
+.round-button {
+    border: 0;
+    box-shadow: 0 0 3px gray;
+    outline: none;
+    line-height: 0px;
+    
+}
+
+.round-button:hover {
+	opacity: 1;
+	-webkit-transition-duration: 0.2s;
+    -moz-transition-duration: 0.2s;
+    -o-transition-duration: 0.2s;
+    transition-duration: 0.2s;
+    
+    -webkit-transition-timing-function: ease-in-out;
+    -moz-transition-timing-function: ease-in-out;
+    -o-transition-timing-function: ease-in-out;
+    transition-timing-function: ease-in-out;
+}
+
+/* Remove outline on the forms and links */
+.round-button:active, .round-button:hover, .round-button:focus {
+    outline: 0;
+    outline-offset: 0;
+}
+
+.properties-table .sp-replacer {
+ 
+ width: 100% !important;   
+}
+
+.properties-table .sp-preview {
+ width: 90% !important;   
+}
+
+.properties-table hr {
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+    margin-top: 10px !important;
+    margin-bottom: 12px !important;
+}
