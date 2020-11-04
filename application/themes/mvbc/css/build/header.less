@@ -41,7 +41,12 @@ header {
   }
   #header-main{
     position: relative;
-    
+    &.sticky{
+      position: fixed;
+      width: 100%;
+      z-index: 999;
+      top: 0;
+    }
     &:before {
       width: 33%;
       height: 92px;
