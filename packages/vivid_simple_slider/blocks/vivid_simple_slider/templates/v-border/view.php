@@ -101,9 +101,6 @@
         @media only screen and (min-width:<?php echo $breakpoint2?>px){
            .btn-slide-prev, .btn-slide-next { display: block; }    
 
-           .slider-bg{
-                height: 200px;
-            }
         }
         
         @media (max-width: 767px){
@@ -114,6 +111,17 @@
                 display: none;
             }
         }
+        @media (max-width: 1300px) and (min-width: 992px){
+            .slider-bg{
+                height: 300px;
+                bottom: 0;
+            }
+        }
+        @media (max-width: 991px) and (min-width: 768px){
+           .slider-bg{
+                height: 200px;
+            }
+        }        
         @media (max-width: 767px){
             #vivid-simple-slider-<?php echo $bID?>, #vivid-simple-slider-<?php echo $bID?> .swiper-slide{
                 height: 260px;
