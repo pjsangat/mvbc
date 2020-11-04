@@ -2,6 +2,8 @@
 <!DOCTYPE html>
 <html lang="<?php echo Localization::activeLanguage() ?>">
 <head>
+
+    <link rel="shortcut icon" href="<?php echo View::url('favicon.png'); ?>" type="image/x-icon" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <link rel="stylesheet" type="text/css" href="<?php echo $view->getThemePath()?>/css/bootstrap-modified.css">
     <?php echo $html->css($view->getStylesheet('main.less')) ?>
@@ -23,6 +25,21 @@
             );
             document.querySelector('head').appendChild(msViewportStyle);
         }
+        $(document).ready(function(){
+
+            window.onscroll = function() {myFunction()};
+            var navbar = document.getElementById("header-main");
+            var sticky = navbar.offsetTop;
+
+            // Add the sticky class to the navbar when you reach its scroll position. Remove "sticky" when you leave the scroll position
+            function myFunction() {
+                if (window.pageYOffset >= sticky && window.pageYOffset != 0) {
+                    navbar.classList.add("sticky")
+                } else {
+                    navbar.classList.remove("sticky");
+                }
+            }
+        });
     </script>
 </head>
 <body>
