@@ -72,7 +72,11 @@ $displayFirstSection = false;
     <div class="container">
         <div class="row">
             <div class="col-sm-12">
-                <span>© <?php echo t('Metro Versatile BuildTech Corporation 2019. All Rights Reserved. Designed and Developed by'); ?> WeManageIT</span>
+                <?php
+                $a = new GlobalArea('Footer Credit');
+                $a->display();
+                ?>
+                <!-- <span>© <?php //echo t('Metro Versatile BuildTech Corporation 2019. All Rights Reserved. Designed and Developed by'); ?> WeManageIT</span> -->
             </div>
         </div>
     </div>
