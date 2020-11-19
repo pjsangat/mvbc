@@ -84,6 +84,9 @@ Basic Swiper Styles
     padding: 10px !important; */
     position: relative;
 }
+.swiper-slide .container .text-container-border .slider-title-img{
+    max-width: 760px;
+}
 .swiper-slide .container .slide-title{
     font-size: 72px;
     background: -webkit-linear-gradient(#E95504, #E95504, #717071, #232323);
@@ -116,7 +119,7 @@ Basic Swiper Styles
 
 @media (max-width: 767px){
     .swiper-slide .container{
-        margin: 15px auto;
+        margin: 13% auto 0;
         background: none;
     }
 }

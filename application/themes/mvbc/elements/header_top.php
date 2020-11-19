@@ -6,6 +6,8 @@
     <link rel="shortcut icon" href="<?php echo View::url('favicon.png'); ?>" type="image/x-icon" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <link rel="stylesheet" type="text/css" href="<?php echo $view->getThemePath()?>/css/bootstrap-modified.css">
+    <link rel="stylesheet" type="text/css" href="<?php echo $view->getThemePath()?>/css/animation.css">
+
     <?php echo $html->css($view->getStylesheet('main.less')) ?>
     <?php
     View::element('header_required', [
