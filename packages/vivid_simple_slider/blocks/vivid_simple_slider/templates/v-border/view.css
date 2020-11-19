@@ -86,6 +86,7 @@ Basic Swiper Styles
 }
 .swiper-slide .container .text-container-border .slider-title-img{
     max-width: 760px;
+    width: 100%;
 }
 .swiper-slide .container .slide-title{
     font-size: 72px;
