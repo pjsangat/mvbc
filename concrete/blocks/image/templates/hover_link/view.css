@@ -1,0 +1,29 @@
+.img-hover-link {
+    position: relative;
+}
+
+.img-hover-link .hover-link-title{
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    font-size: 20px;
+    padding: 10px 20px;
+    height: 18%;
+    width: auto;
+    font-weight: bold;
+    color: #E95504;
+    display: none;
+    z-index: 1;
+    transition: all 1s;
+}
+.img-hover-link:hover .hover-link-title{
+    display: block;
+    transition: all 1s;
+}
+.img-hover-link:hover img{
+    filter: blur(2px);
+    transition: all 1s;
+}
