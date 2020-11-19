@@ -76,13 +76,14 @@ Basic Swiper Styles
 }
 
 .swiper-slide .container{
-    margin-top: 10%;
+    margin-top: 15%;
     position: relative;
 }
 .swiper-slide .container .text-container-border{
     /* border: 6px solid #fff;
     padding: 10px !important; */
     position: relative;
+    text-align: left;
 }
 .swiper-slide .container .text-container-border .slider-title-img{
     max-width: 760px;
