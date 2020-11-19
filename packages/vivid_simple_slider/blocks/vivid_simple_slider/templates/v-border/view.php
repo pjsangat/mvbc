@@ -166,10 +166,11 @@
             <div class="swiper-slide" data-small-background="<?php echo $small->src?>" data-medium-background="<?php echo $medium->src?>" data-large-background="<?php echo $large->src?>">
                 
                 <div class="container">
-                    <div class="text-container-border">
+                    <div class="text-container-border wow bounceIn">
+                        <img class="slider-title-img" src="<?php echo $view->getThemePath(); ?>/images/EASY TO BUILD.png" />
+
                         <?php  if($item['title']){?>
                         <h1 class="slide-title"><?php echo $item['title']?></h1>
-                        <!-- <h1 class="slide-title-clone"><?php //echo $item['title']?></h1> -->
                         <?php  } ?>
                         <?php  if($item['slidedesc']){?>
                         <div class="slide-desc"><?php echo $item['slidedesc']?></div>
