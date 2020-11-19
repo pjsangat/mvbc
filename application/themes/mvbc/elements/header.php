@@ -12,8 +12,7 @@ $this->inc('elements/header_top.php');
     <div id="header-top">
         <div class="container">
             <div class="row">
-                <div class="col-sm-6"></div>
-                <div class="col-sm-6">
+                <div class="col-sm-12">
                     <ul>
                         <li>
                             <?php
@@ -42,13 +41,13 @@ $this->inc('elements/header_top.php');
     <div id="header-main">
         <div class="container">
             <div class="row">
-                <div class="col-sm-4 col-xs-9">
+                <div class="col-sm-3 col-xs-9">
                     <?php
                     $a = new GlobalArea('Header Site Title');
                     $a->display();
                     ?>
                 </div>
-                <div class="col-sm-8 col-xs-3">
+                <div class="col-sm-9 col-xs-3">
                     <?php
                     $a = new GlobalArea('Header Navigation');
                     $a->display();
