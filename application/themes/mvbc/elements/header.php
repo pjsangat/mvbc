@@ -53,6 +53,7 @@ $this->inc('elements/header_top.php');
                     $a = new GlobalArea('Header Navigation');
                     $a->display();
                     ?>
+                    <div class="clearfix"></div>
                 </div>
             </div>
         </div>
