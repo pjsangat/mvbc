@@ -165,11 +165,11 @@
             ?>
             <div class="swiper-slide" data-small-background="<?php echo $small->src?>" data-medium-background="<?php echo $medium->src?>" data-large-background="<?php echo $large->src?>">
                 
-                <div class="text-container">
-
+                <div class="container">
                     <div class="text-container-border">
                         <?php  if($item['title']){?>
-                        <div class="slide-title"><?php echo $item['title']?></div>
+                        <h1 class="slide-title"><?php echo $item['title']?></h1>
+                        <!-- <h1 class="slide-title-clone"><?php //echo $item['title']?></h1> -->
                         <?php  } ?>
                         <?php  if($item['slidedesc']){?>
                         <div class="slide-desc"><?php echo $item['slidedesc']?></div>
