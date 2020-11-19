@@ -44,6 +44,6 @@
         });
     </script>
 </head>
-<body>
+<body data-scroll-animation="true">
 
 <div class="<?php echo $c->getPageWrapperClass()?>">
