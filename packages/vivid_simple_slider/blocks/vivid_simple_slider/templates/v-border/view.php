@@ -90,14 +90,14 @@
             .swiper-pagination-switch.swiper-active-switch { background: #fff; }
 
 
-        .slider-bg{
+        /* .slider-bg{
             background: url('<?php echo $blockURL; ?>/img/header_banner-1.png') center center no-repeat;
             height: 400px;
             position: absolute;
             bottom: -40px;
             width: 100%;
             background-size: cover;
-        }
+        } */
         @media only screen and (min-width:<?php echo $breakpoint2?>px){
            .btn-slide-prev, .btn-slide-next { display: block; }    
 
@@ -112,15 +112,15 @@
             }
         }
         @media (max-width: 1300px) and (min-width: 992px){
-            .slider-bg{
+            /* .slider-bg{
                 height: 300px;
                 bottom: 0;
-            }
+            } */
         }
         @media (max-width: 991px) and (min-width: 768px){
-           .slider-bg{
+           /* .slider-bg{
                 height: 200px;
-            }
+            } */
         }        
         @media (max-width: 767px){
             #vivid-simple-slider-<?php echo $bID?>, #vivid-simple-slider-<?php echo $bID?> .swiper-slide{
