@@ -76,8 +76,13 @@ Basic Swiper Styles
 }
 
 .swiper-slide .container{
-    margin-top: 15%;
-    position: relative;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    height: 60px;
+    margin: auto;
 }
 .swiper-slide .container .text-container-border{
     /* border: 6px solid #fff;
@@ -86,7 +91,7 @@ Basic Swiper Styles
     text-align: left;
 }
 .swiper-slide .container .text-container-border .slider-title-img{
-    max-width: 760px;
+    max-width: 900px;
     width: 100%;
 }
 .swiper-slide .container .slide-title{
@@ -121,7 +126,6 @@ Basic Swiper Styles
 
 @media (max-width: 767px){
     .swiper-slide .container{
-        margin: 13% auto 0;
         background: none;
     }
 }
