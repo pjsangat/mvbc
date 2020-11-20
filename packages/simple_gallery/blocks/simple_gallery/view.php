@@ -1,5 +1,15 @@
 <?php defined('C5_EXECUTE') or die('Access Denied.'); ?>
-
+<style type="text/css">
+    .sg-item{
+        display: block;
+    }
+    .sg-item-title {
+        margin-top: 10px;
+        color: #E95504;
+        font-weight: bold;
+        text-align: center;
+    }
+</style>
 <?php if (count($images)): ?>
 
     <div class="sg sg-<?php echo $bID; ?> js-sg">
@@ -22,6 +32,7 @@
                          height="<?php echo $image['thumbnailHeight']; ?>"
                     />
                 </div>
+                <div class="sg-item-title"><?php echo h($image['alt']); ?></div>
 
             </a>
 
