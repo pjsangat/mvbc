@@ -118,12 +118,23 @@ class PageTheme extends Theme implements ThemeProviderInterface
             ['title' => t('Heading BG'), 'menuClass' => 'heading-bg', 'spanClass' => 'heading-bg', 'forceBlock' => 1],
             ['title' => t('Porto Title'), 'menuClass' => 'porto-title', 'spanClass' => 'porto-title', 'forceBlock' => 1],
 
+            ['title' => t('Page Title Above'), 'menuClass' => 'page-title-above', 'spanClass' => 'page-title-above', 'forceBlock' => 1],
+            ['title' => t('Page Title Below'), 'menuClass' => 'page-title-below', 'spanClass' => 'page-title-below', 'forceBlock' => 1],
+
+
             ['title' => t('Image Caption'), 'menuClass' => 'image-caption', 'spanClass' => 'image-caption', 'forceBlock' => '-1'],
 
             ['title' => t('Success Button'), 'menuClass' => '', 'spanClass' => 'btn btn-success', 'forceBlock' => '-1'],
             ['title' => t('Standard Button'), 'menuClass' => '', 'spanClass' => 'btn btn-default', 'forceBlock' => '-1'],
             ['title' => t('Secondary Button'), 'menuClass' => '', 'spanClass' => 'btn btn-secondary', 'forceBlock' => '-1'],
             ['title' => t('Primary Button'), 'menuClass' => '', 'spanClass' => 'btn btn-primary', 'forceBlock' => '-1'],
+
+            ['title' => t('Page Title Small'), 'menuClass' => '', 'spanClass' => 'page-title-small', 'forceBlock' => '-1'],
+
+            ['title' => t('Orange Color'), 'menuClass' => 'orange-font', 'spanClass' => 'orange-font', 'forceBlock' => '-1'],
+            ['title' => t('White Color'), 'menuClass' => 'white-font', 'spanClass' => 'white-font', 'forceBlock' => '-1'],
+            ['title' => t('Gray Color'), 'menuClass' => 'gray-font', 'spanClass' => 'gray-font', 'forceBlock' => '-1'],
+
         ];
     }
 
