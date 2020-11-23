@@ -233,6 +233,12 @@ class Controller extends BlockController
                                       $subPage); //We could optimize by instantiating the navigation helper outside the loop, but this is such an infrequent attribute that I prefer code clarity over performance in this case
                 }
             }
+
+            $removeNavLink = false;
+            if ($_c->getAttribute('removeNavLink')) {
+                $removeNavLink = true;
+            }
+
             if (!$pageLink) {
                 $pageLink = $ni->getURL();
             }
@@ -300,9 +306,10 @@ class Controller extends BlockController
             $navItem->isHome = $is_home_page;
             $navItem->cID = $item_cid;
             $navItem->cObj = $_c;
+            $navItem->removeNavLink = $removeNavLink;
             $navItems[] = $navItem;
         }
-
+        // exit();
         return $navItems;
     }
 
