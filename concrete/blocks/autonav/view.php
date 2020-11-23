@@ -111,9 +111,9 @@ if (count($navItems) > 0) {
     echo '<ul class="nav">'; //opens the top-level menu
 
     foreach ($navItems as $ni) {
-        echo $ni->removeNavLink;
         
         echo '<li class="' . $ni->classes . '">'; //opens a nav item
+        $name = (isset($translate) && $translate == true) ? t($ni->name) : $ni->name;
         if( !$ni->removeNavLink){
             echo '<a href="' . $ni->url . '" target="' . $ni->target . '" class="' . $ni->classes . '">' . $name . '</a>';
         }else{
