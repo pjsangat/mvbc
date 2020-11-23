@@ -113,7 +113,11 @@ echo '<nav class="ccm-responsive-navigation original"><ul>'; //opens the top-lev
 foreach ($navItems as $ni) {
     echo '<li class="' . $ni->classes . '">'; //opens a nav item
     $name = (isset($translate) && $translate == true) ? t($ni->name) : $ni->name;
-    echo '<a href="' . $ni->url . '" target="' . $ni->target . '" class="' . $ni->classes . '">' . $name . '</a>';
+    if( !$ni->removeNavLink){
+        echo '<a href="' . $ni->url . '" target="' . $ni->target . '" class="' . $ni->classes . '">' . $name . '</a>';
+    }else{
+        echo '<a href="javascript:;" target="' . $ni->target . '" class="' . $ni->classes . '">' . $name . '</a>';
+    }
 
     if ($ni->hasSubmenu) {
         echo '<ul>'; //opens a dropdown sub-menu
