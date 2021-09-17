@@ -279,12 +279,12 @@ class ManyAssociation extends \Concrete\Core\Entity\Express\Entry\ManyAssociatio
     /**
      * {@inheritDoc}
      */
-    public function removeSelectedEntry(\Concrete\Core\Entity\Express\Entry $entry)
+    public function getAssociationEntry(\Concrete\Core\Entity\Express\Entry $entry)
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'removeSelectedEntry', [$entry]);
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getAssociationEntry', [$entry]);
 
-        return parent::removeSelectedEntry($entry);
+        return parent::getAssociationEntry($entry);
     }
 
 }

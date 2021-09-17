@@ -7,7 +7,8 @@ use View as ConcreteView;
 use Concrete\Core\Asset\CssAsset;
 use Concrete\Core\Asset\JavascriptAsset;
 use Concrete\Core\Asset\JavascriptInlineAsset;
-use User;
+use Concrete\Core\User\User;
+use Concrete\Core\Support\Facade\Application;
 
 class DialogView extends ConcreteView
 {
@@ -15,6 +16,17 @@ class DialogView extends ConcreteView
     {
         $this->markHeaderAssetPosition();
     }
+
+    public function getViewTemplateFile()
+    {
+        return $this->template;
+    }
+
+    protected function loadViewThemeObject()
+    {
+        return null;
+    }
+
 
     public function outputAssetIntoView($item)
     {
@@ -28,8 +40,9 @@ class DialogView extends ConcreteView
 
     public function getScopeItems()
     {
+        $app = Application::getFacadeApplication();
         $items = parent::getScopeItems();
-        $u = new User();
+        $u = $app->make(User::class);
         $items['u'] = $u;
 
         return $items;

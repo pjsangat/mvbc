@@ -1,6 +1,7 @@
 <?php
 namespace Concrete\Core\User\PrivateMessage;
 
+use Concrete\Core\Logging\Channels;
 use Loader;
 use DateTime;
 use Config;
@@ -10,6 +11,12 @@ use View;
 
 class Limit
 {
+
+    /**
+     * @var bool Tracks whether limiting is enabled
+     */
+    protected static $enabled = true;
+
     /**
      * checks to see if a user has exceeded their limit for sending private messages.
      *
@@ -17,7 +24,7 @@ class Limit
      *
      * @return bool
      */
-    public function isOverLimit($uID)
+    public static function isOverLimit($uID)
     {
         if (Config::get('concrete.user.private_messages.throttle_max') == 0) {
             return false;
@@ -41,7 +48,7 @@ class Limit
         }
     }
 
-    public function getErrorObject()
+    public static function getErrorObject()
     {
         $ve = Loader::helper('validation/error');
         $ve->add(t('You may not send more than %s messages in %s minutes', Config::get('concrete.user.private_messages.throttle_max'), Config::get('concrete.user.private_messages.throttle_max_timespan')));
@@ -58,7 +65,12 @@ class Limit
 
         $admin = UserInfo::getByID(USER_SUPER_ID);
 
-        \Log::addEntry(t("User: %s has tried to send more than %s private messages within %s minutes", $offender->getUserName(), Config::get('concrete.user.private_messages.throttle_max'), Config::get('concrete.user.private_messages.throttle_max_timespan')), t('warning'));
+        $app = Facade::getFacadeApplication();
+        $logger = $app->make('log/factory')->createLogger(Channels::CHANNEL_SPAM);
+        $logger->warning(t("User: %s has tried to send more than %s private messages within %s minutes",
+            $offender->getUserName(),
+            Config::get('concrete.user.private_messages.throttle_max'),
+            Config::get('concrete.user.private_messages.throttle_max_timespan')));
 
         $mh = Loader::helper('mail');
 
@@ -70,5 +82,15 @@ class Limit
         $mh->addParameter('siteName', tc('SiteName', \Core::make('site')->getSite()->getSiteName()));
         $mh->load('private_message_admin_warning');
         $mh->sendMail();
+    }
+
+    /**
+     * Enable or disable Limits
+     *
+     * @param bool $enabled
+     */
+    public static function setEnabled($enabled = true)
+    {
+        static::$enabled = (bool) $enabled;
     }
 }

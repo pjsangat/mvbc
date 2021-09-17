@@ -71,7 +71,7 @@ class Currency
                 if (in_array($quantity, array('zero', 'one', 'two', 'few', 'many', 'other'))) {
                     $pluralRule = $quantity;
                 } else {
-                    $pluralRule = Plural::getRule($quantity, $locale);
+                    $pluralRule = Plural::getRuleOfType($quantity, Plural::RULETYPE_CARDINAL, $locale);
                 }
                 if (!isset($data['pluralName'][$pluralRule])) {
                     $pluralRule = 'other';
@@ -121,6 +121,54 @@ class Currency
         }
 
         return $result;
+    }
+
+    /**
+     * Returns the ISO 4217 code for a currency given its currency code.
+     *
+     * Historical currencies are not supported.
+     *
+     * @param string $currencyCode The 3-letter currency code
+     *
+     * @return string Returns the numeric ISO 427 code, or an empty string if $currencyCode is not valid
+     *
+     * @see http://unicode.org/reports/tr35/tr35-info.html#Supplemental_Code_Mapping
+     */
+    public static function getNumericCode($currencyCode)
+    {
+        $codeMappings = Data::getGeneric('codeMappings');
+        $currencies = $codeMappings['currencies'];
+
+        if (isset($currencies[$currencyCode]['numeric'])) {
+            return $currencies[$currencyCode]['numeric'];
+        }
+
+        return '';
+    }
+
+    /**
+     * Returns the currency code given its ISO 4217 code.
+     *
+     * Historical currencies are not supported.
+     *
+     * @param string $code The numeric ISO 427 code
+     *
+     * @return string Returns the 3-letter currency code, or an empty string if $code is not valid
+     *
+     * @see http://unicode.org/reports/tr35/tr35-info.html#Supplemental_Code_Mapping
+     */
+    public static function getByNumericCode($code)
+    {
+        $codeMappings = Data::getGeneric('codeMappings');
+        $currencies = $codeMappings['currencies'];
+
+        foreach ($currencies as $currencyCode => $currency) {
+            if (isset($currency['numeric']) && $currency['numeric'] == $code) {
+                return $currencyCode;
+            }
+        }
+
+        return '';
     }
 
     /**

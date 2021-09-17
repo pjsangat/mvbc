@@ -613,4 +613,15 @@ class User extends \Concrete\Core\Entity\User\User implements \Doctrine\ORM\Prox
         return parent::__toString();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public function getIdentifier()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getIdentifier', []);
+
+        return parent::getIdentifier();
+    }
+
 }

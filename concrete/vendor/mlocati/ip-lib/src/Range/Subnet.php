@@ -19,14 +19,14 @@ class Subnet implements RangeInterface
     /**
      * Starting address of the range.
      *
-     * @var AddressInterface
+     * @var \IPLib\Address\AddressInterface
      */
     protected $fromAddress;
 
     /**
      * Final address of the range.
      *
-     * @var AddressInterface
+     * @var \IPLib\Address\AddressInterface
      */
     protected $toAddress;
 
@@ -54,11 +54,13 @@ class Subnet implements RangeInterface
     /**
      * Initializes the instance.
      *
-     * @param AddressInterface $fromAddress
-     * @param AddressInterface $toAddress
+     * @param \IPLib\Address\AddressInterface $fromAddress
+     * @param \IPLib\Address\AddressInterface $toAddress
      * @param int $networkPrefix
+     *
+     * @internal
      */
-    protected function __construct(AddressInterface $fromAddress, AddressInterface $toAddress, $networkPrefix)
+    public function __construct(AddressInterface $fromAddress, AddressInterface $toAddress, $networkPrefix)
     {
         $this->fromAddress = $fromAddress;
         $this->toAddress = $toAddress;
@@ -115,7 +117,7 @@ class Subnet implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::toString()
+     * @see \IPLib\Range\RangeInterface::toString()
      */
     public function toString($long = false)
     {
@@ -125,7 +127,7 @@ class Subnet implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::__toString()
+     * @see \IPLib\Range\RangeInterface::__toString()
      */
     public function __toString()
     {
@@ -135,7 +137,7 @@ class Subnet implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getAddressType()
+     * @see \IPLib\Range\RangeInterface::getAddressType()
      */
     public function getAddressType()
     {
@@ -145,7 +147,7 @@ class Subnet implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getRangeType()
+     * @see \IPLib\Range\RangeInterface::getRangeType()
      */
     public function getRangeType()
     {
@@ -183,7 +185,7 @@ class Subnet implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::contains()
+     * @see \IPLib\Range\RangeInterface::contains()
      */
     public function contains(AddressInterface $address)
     {
@@ -205,7 +207,7 @@ class Subnet implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::containsRange()
+     * @see \IPLib\Range\RangeInterface::containsRange()
      */
     public function containsRange(RangeInterface $range)
     {
@@ -228,7 +230,7 @@ class Subnet implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getStartAddress()
+     * @see \IPLib\Range\RangeInterface::getStartAddress()
      */
     public function getStartAddress()
     {
@@ -238,7 +240,7 @@ class Subnet implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getEndAddress()
+     * @see \IPLib\Range\RangeInterface::getEndAddress()
      */
     public function getEndAddress()
     {
@@ -248,7 +250,7 @@ class Subnet implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getComparableStartString()
+     * @see \IPLib\Range\RangeInterface::getComparableStartString()
      */
     public function getComparableStartString()
     {
@@ -258,7 +260,7 @@ class Subnet implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getComparableEndString()
+     * @see \IPLib\Range\RangeInterface::getComparableEndString()
      */
     public function getComparableEndString()
     {
@@ -277,5 +279,56 @@ class Subnet implements RangeInterface
         }
 
         return self::$sixToFour;
+    }
+
+    /**
+     * Get subnet prefix.
+     *
+     * @return int
+     */
+    public function getNetworkPrefix()
+    {
+        return $this->networkPrefix;
+    }
+
+    /**
+     * Get the pattern representation (if applicable) of this range.
+     *
+     * @return \IPLib\Range\Pattern|null return NULL if this range can't be represented by a pattern notation
+     */
+    public function asPattern()
+    {
+        $address = $this->getStartAddress();
+        $networkPrefix = $this->getNetworkPrefix();
+        switch ($address->getAddressType()) {
+            case AddressType::T_IPv4:
+                return $networkPrefix % 8 === 0 ? new Pattern($address, $address, 4 - $networkPrefix / 8) : null;
+            case AddressType::T_IPv6:
+                return $networkPrefix % 16 === 0 ? new Pattern($address, $address, 8 - $networkPrefix / 16) : null;
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @see \IPLib\Range\RangeInterface::getSubnetMask()
+     */
+    public function getSubnetMask()
+    {
+        if ($this->getAddressType() !== AddressType::T_IPv4) {
+            return null;
+        }
+        $bytes = array();
+        $prefix = $this->getNetworkPrefix();
+        while ($prefix >= 8) {
+            $bytes[] = 255;
+            $prefix -= 8;
+        }
+        if ($prefix !== 0) {
+            $bytes[] = bindec(str_pad(str_repeat('1', $prefix), 8, '0'));
+        }
+        $bytes = array_pad($bytes, 4, 0);
+
+        return IPv4::fromBytes($bytes);
     }
 }

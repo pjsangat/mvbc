@@ -419,6 +419,17 @@ class File extends \Concrete\Core\Entity\File\File implements \Doctrine\ORM\Prox
     /**
      * {@inheritDoc}
      */
+    public function getUser()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getUser', []);
+
+        return parent::getUser();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function setUser(\Concrete\Core\Entity\User\User $user)
     {
 

@@ -1,5 +1,5 @@
 /* jshint unused:vars, undef:true, browser:true, jquery:true */
-/* global Concrete, ConcreteAlert, ConcreteEvent, ConcreteMenuManager, ConcretePanelManager, ConcreteToolbar, ccmi18n, _, CCM_DISPATCHER_FILENAME, CCM_TOOLS_PATH */
+/* global Concrete, ConcreteAlert, ConcreteEvent, ConcreteMenuManager, ConcretePanelManager, ConcreteToolbar, ConcreteAjaxRequest, ccmi18n, _, CCM_DISPATCHER_FILENAME, CCM_TOOLS_PATH */
 
 ;(function(window, $) {
     'use strict';
@@ -135,6 +135,7 @@
                 // need the file manager menu when editing block design.
 //              ConcreteMenuManager.disable();
                 ConcreteToolbar.disable();
+                ConcreteMenuManager.$clickProxy.hide();
                 $('div.ccm-area').addClass('ccm-area-inline-edit-disabled');
                 block.getElem().addClass('ccm-block-edit-inline-active');
 
@@ -185,7 +186,7 @@
                 if (templates) {
                     for (var k in templates) {
                         postData[postData.length] = {
-                            name: 'arCustomTemplate[' + k + ']',
+                            name: 'arCustomTemplates[' + k + ']',
                             value: templates[k]
                         };
                     }
@@ -199,6 +200,7 @@
                 ConcreteToolbar.disable();
                 $.fn.dialog.closeAll();
 
+                ConcreteMenuManager.$clickProxy.hide();
                 $('div.ccm-area').addClass('ccm-area-inline-edit-disabled');
 
                 $.fn.dialog.showLoader();
@@ -376,12 +378,12 @@
                     sourceArea = data.sourceArea,
                     send = {
                         ccm_token: window.CCM_SECURITY_TOKEN,
-                        btask: 'ajax_do_arrange',
                         area: targetArea.getId(),
                         sourceArea: sourceArea.getId(),
                         block: block.getId(),
-                        blocks: []
-                    };
+                        blocks: [],
+                    },
+                    loaderDisplayed = false;
 
                 targetArea = targetArea.inEditMode(targetArea.getEditMode());
 
@@ -389,18 +391,30 @@
                     send.blocks.push(block.getId());
                 });
                 block.bindMenu();
-                var loading = false, timeout = setTimeout(function () {
-                    loading = true;
+                var timeout = setTimeout(function () {
+                	loaderDisplayed = true;
                     $.fn.dialog.showLoader();
                 }, 150);
 
                 $.concreteAjax({
                     url: CCM_DISPATCHER_FILENAME + '/ccm/system/page/arrange_blocks?cID=' + block.getCID(),
+                    dataType: 'json',
                     data: send,
+                    skipResponseValidation: true,
                     success: function (r) {
-                        ConcreteToolbar.disableDirectExit();
-                        $.fn.dialog.hideLoader();
                         clearTimeout(timeout);
+                        if (loaderDisplayed) {
+                        	$.fn.dialog.hideLoader();
+                        }
+                    	ConcreteAjaxRequest.validateResponse(r, function(ok) {
+                    		if (ok) {
+                    			ConcreteToolbar.disableDirectExit();
+                    		} else {
+                    			if (data.revert) {
+                    				data.revert();
+                    			}
+                    		}
+                    	});
                     }
                 });
 
@@ -480,7 +494,7 @@
 
 
             $(element).find('div.ccm-panel-add-block-stack-item').each(function () {
-                var stack, me = $(this), dragger = me.find('img.ccm-panel-add-block-stack-item-handle');
+                var stack, me = $(this), dragger = me.find('.ccm-panel-add-block-stack-item-handle');
                 stack = new Concrete.Stack($(this), my, dragger, next_area);
 
                 stack.setPeper(dragger);
@@ -618,6 +632,7 @@
             ConcreteMenuManager.enable();
             $('div.ccm-area-edit-inline-active').removeClass('ccm-area-edit-inline-active');
             $('div.ccm-block-edit-inline-active').remove();
+            ConcreteMenuManager.$clickProxy.show();
             $('div.ccm-area').removeClass('ccm-area-inline-edit-disabled');
             $('#ccm-toolbar').css('opacity', 1);
             $('#ccm-inline-toolbar-container').remove();

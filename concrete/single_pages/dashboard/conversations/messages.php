@@ -122,18 +122,14 @@ $ip = Loader::helper('validation/ip');
 
 <div class="ccm-dashboard-header-buttons">
     <div class="ccm-header-search-form ccm-ui">
-        <form role="form" action="<?=$controller->action('view')?>">
-            <div class="input-group">
-                <input type="text" class="form-control" autocomplete="off" name="cmpMessageKeywords" value="<?=h($_REQUEST['cmpMessageKeywords'])?>" placeholder="<?=t('Keywords')?>">
-                <span class="input-group-btn">
-                <select data-select="bootstrap" name="cmpMessageFilter">
-                    <?php foreach ($cmpFilterTypes as $optionValue => $optionText) { ?>
-                        <option value="<?php echo $optionValue; ?>" <?php if ($optionValue == $cmpMessageFilter) { echo 'selected'; } ?>><?php echo $optionText; ?></option>
-                    <?php } ?>
-                </select>
-                <button class="btn btn-info" type="submit"><i class="fa fa-search"></i></button>
-                </span>
-            </div>
+        <form class="form-inline" role="form" action="<?=$controller->action('view')?>">
+            <input type="text" class="form-control" autocomplete="off" name="cmpMessageKeywords" value="<?=h($_REQUEST['cmpMessageKeywords'])?>" placeholder="<?=t('Keywords')?>">
+            <select data-select="bootstrap" name="cmpMessageFilter">
+                <?php foreach ($cmpFilterTypes as $optionValue => $optionText) { ?>
+                    <option value="<?php echo $optionValue; ?>" <?php if ($optionValue == $cmpMessageFilter) { echo 'selected'; } ?>><?php echo $optionText; ?></option>
+                <?php } ?>
+            </select>
+            <button class="btn btn-info" type="submit"><i class="fa fa-search"></i></button>
         </form>
     </div>
 </div>
@@ -152,7 +148,8 @@ $(function() {
         $.concreteAjax({
             url: '<?=REL_DIR_FILES_TOOLS_REQUIRED?>/conversations/flag_message',
             data: {
-                'cnvMessageID': $(this).attr('data-message-id')
+                'cnvMessageID': $(this).attr('data-message-id'),
+                'token': '<?= $valt->generate('flag_conversation_message'); ?>'
             },
             success: function(r) {
                 window.location.reload();
@@ -165,7 +162,8 @@ $(function() {
         $.concreteAjax({
             url: '<?=REL_DIR_FILES_TOOLS_REQUIRED?>/conversations/delete_message',
             data: {
-                'cnvMessageID': $(this).attr('data-message-id')
+                'cnvMessageID': $(this).attr('data-message-id'),
+                'token': '<?= $valt->generate('delete_conversation_message'); ?>'
             },
             success: function(r) {
                 window.location.reload();

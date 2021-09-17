@@ -316,4 +316,15 @@ class StorageLocation extends \Concrete\Core\Entity\File\StorageLocation\Storage
         return parent::save();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public function hasFiles()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'hasFiles', []);
+
+        return parent::hasFiles();
+    }
+
 }

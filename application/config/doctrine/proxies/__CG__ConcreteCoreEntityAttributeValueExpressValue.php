@@ -198,6 +198,17 @@ class ExpressValue extends \Concrete\Core\Entity\Attribute\Value\ExpressValue im
     /**
      * {@inheritDoc}
      */
+    public function updateEntryDateModified()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'updateEntryDateModified', []);
+
+        return parent::updateEntryDateModified();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getAttributeKey()
     {
 

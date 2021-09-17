@@ -64,10 +64,10 @@ class Entry extends \Concrete\Core\Entity\Express\Entry implements \Doctrine\ORM
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return ['__isInitialized__', 'entryFormatter', 'exEntryID', 'exEntryDisplayOrder', 'exEntryDateCreated', 'entity', 'attributes', 'associations', 'containing_associations'];
+            return ['__isInitialized__', 'entryFormatter', 'exEntryID', 'author', 'exEntryDisplayOrder', 'exEntryDateCreated', 'entity', 'exEntryDateModified', 'publicIdentifier', 'attributes', 'associations'];
         }
 
-        return ['__isInitialized__', 'entryFormatter', 'exEntryID', 'exEntryDisplayOrder', 'exEntryDateCreated', 'entity', 'attributes', 'associations', 'containing_associations'];
+        return ['__isInitialized__', 'entryFormatter', 'exEntryID', 'author', 'exEntryDisplayOrder', 'exEntryDateCreated', 'entity', 'exEntryDateModified', 'publicIdentifier', 'attributes', 'associations'];
     }
 
     /**
@@ -182,6 +182,17 @@ class Entry extends \Concrete\Core\Entity\Express\Entry implements \Doctrine\ORM
         $this->__initializer__ && $this->__initializer__->__invoke($this, '__call', [$nm, $a]);
 
         return parent::__call($nm, $a);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function is($entityHandle)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'is', [$entityHandle]);
+
+        return parent::is($entityHandle);
     }
 
     /**
@@ -396,6 +407,17 @@ class Entry extends \Concrete\Core\Entity\Express\Entry implements \Doctrine\ORM
     /**
      * {@inheritDoc}
      */
+    public function updateDateModified()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'updateDateModified', []);
+
+        return parent::updateDateModified();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getLabel()
     {
 
@@ -413,6 +435,28 @@ class Entry extends \Concrete\Core\Entity\Express\Entry implements \Doctrine\ORM
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'jsonSerialize', []);
 
         return parent::jsonSerialize();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getDateModified()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getDateModified', []);
+
+        return parent::getDateModified();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setDateModified($exEntryDateModified)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setDateModified', [$exEntryDateModified]);
+
+        return parent::setDateModified($exEntryDateModified);
     }
 
     /**
@@ -457,6 +501,50 @@ class Entry extends \Concrete\Core\Entity\Express\Entry implements \Doctrine\ORM
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getExporter', []);
 
         return parent::getExporter();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getAuthor()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getAuthor', []);
+
+        return parent::getAuthor();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setAuthor($author)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setAuthor', [$author]);
+
+        return parent::setAuthor($author);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getPublicIdentifier()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getPublicIdentifier', []);
+
+        return parent::getPublicIdentifier();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setPublicIdentifier($publicIdentifier)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setPublicIdentifier', [$publicIdentifier]);
+
+        return parent::setPublicIdentifier($publicIdentifier);
     }
 
     /**

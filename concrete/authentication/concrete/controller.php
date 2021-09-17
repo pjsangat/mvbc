@@ -2,8 +2,18 @@
 namespace Concrete\Authentication\Concrete;
 
 use Concrete\Core\Authentication\AuthenticationTypeController;
+use Concrete\Core\Database\Connection\Connection;
+use Concrete\Core\Encryption\PasswordHasher;
+use Concrete\Core\Error\UserMessageException;
 use Concrete\Core\Support\Facade\Application;
+use Concrete\Core\User\Exception\FailedLoginThresholdExceededException;
+use Concrete\Core\User\Exception\InvalidCredentialsException;
+use Concrete\Core\User\Exception\UserDeactivatedException;
+use Concrete\Core\User\Exception\UserException;
+use Concrete\Core\User\Exception\UserPasswordResetException;
+use Concrete\Core\User\Login\LoginService;
 use Concrete\Core\User\User;
+use Concrete\Core\User\PersistentAuthentication\CookieService;
 use Concrete\Core\User\ValidationHash;
 use Concrete\Core\Validation\CSRF\Token;
 use Config;
@@ -26,12 +36,15 @@ class Controller extends AuthenticationTypeController
 
     public function deauthenticate(User $u)
     {
-        $cookie = array_get($_COOKIE, 'ccmAuthUserHash', '');
-        if ($cookie) {
-            list($uID, $authType, $hash) = explode(':', $cookie);
-            if ($authType == 'concrete') {
-                $db = Database::connection();
-                $db->executeQuery('DELETE FROM authTypeConcreteCookieMap WHERE uID=? AND token=?', [$uID, $hash]);
+        $authCookie = $this->app->make(CookieService::class)->getCookie();
+        if ($authCookie === null || $authCookie->getAuthenticationTypeHandle() !== 'concrete') {
+            return;
+        }
+        $hasher = $this->app->make(PasswordHasher::class);
+        $db = $this->app->make(Connection::class);
+        foreach ($db->fetchAll('select token from authTypeConcreteCookieMap WHERE uID = ? ORDER BY validThrough DESC', [$authCookie->getUserID()]) as $row) {
+            if ($hasher->checkPassword($authCookie->getToken(), $row['token'])) {
+                $db->delete('authTypeConcreteCookieMap', ['uID' => $authCookie->getUserID(), 'token' => $row['token']]);
             }
         }
     }
@@ -43,21 +56,35 @@ class Controller extends AuthenticationTypeController
 
     public function verifyHash(User $u, $hash)
     {
-        $uID = $u->getUserID();
-        $db = Database::connection();
-        $q = $db->fetchColumn(
-            'SELECT validThrough FROM authTypeConcreteCookieMap WHERE uID=? AND token=?',
-            [$uID, $hash]
-        );
-        $bool = time() < $q;
-        if (!$bool) {
-            $db->executeQuery('DELETE FROM authTypeConcreteCookieMap WHERE uID=? AND token=?', [$uID, $hash]);
+        $uID = (int) $u->getUserID();
+        $db = $this->app->make(Connection::class);
+        $hasher = $this->app->make(PasswordHasher::class);
+        $validRow = null;
+        foreach ($db->fetchAll('select validThrough, token from authTypeConcreteCookieMap WHERE uID = ? ORDER BY validThrough DESC', [$uID]) as $row) {
+            if ($hasher->checkPassword($hash, $row['token'])) {
+                $validRow = $row;
+                break;
+            }
+        }
+        if ($validRow === null) {
+            return;
+        }
+        $stillValid = time() < $validRow['validThrough'];
+        if ($stillValid) {
+            $newTime = time() + (int) $this->app->make('config')->get('concrete.session.remember_me.lifetime');
+            $db->update(
+                'authTypeConcreteCookieMap',
+                ['validThrough' => $newTime],
+                ['uID' => $uID, 'token' => $row['token']]
+            );
         } else {
-            $newTime = strtotime('+2 weeks');
-            $db->executeQuery('UPDATE authTypeConcreteCookieMap SET validThrough=?', [$newTime]);
+            $db->delete(
+                'authTypeConcreteCookieMap',
+                ['uID' => $uID, 'token' => $row['token']]
+            );
         }
 
-        return $bool;
+        return $stillValid;
     }
 
     public function view()
@@ -73,12 +100,13 @@ class Controller extends AuthenticationTypeController
         }
         $db = Database::connection();
 
-        $validThrough = strtotime('+2 weeks');
+        $validThrough = time() + (int) $this->app->make('config')->get('concrete.session.remember_me.lifetime');
         $token = $this->genString();
+        $hasher = $this->app->make(PasswordHasher::class);
         try {
             $db->executeQuery(
                 'INSERT INTO authTypeConcreteCookieMap (token, uID, validThrough) VALUES (?,?,?)',
-                [$token, $u->getUserID(), $validThrough]
+                [$hasher->hashPassword($token), $u->getUserID(), $validThrough]
             );
         } catch (\Exception $e) {
             // HOLY CRAP.. SERIOUSLY?
@@ -259,7 +287,7 @@ class Controller extends AuthenticationTypeController
             $vh = new ValidationHash();
             if ($vh->isValid($uHash)) {
                 if (isset($_POST['uPassword']) && strlen($_POST['uPassword'])) {
-                    Core::make('validator/password')->isValid($_POST['uPassword'], $e);
+                    Core::make('validator/password')->isValidFor($_POST['uPassword'], $ui, $e);
 
                     if (strlen($_POST['uPassword']) && $_POST['uPasswordConfirm'] != $_POST['uPassword']) {
                         $e->add(t('The two passwords provided do not match.'));
@@ -321,46 +349,55 @@ class Controller extends AuthenticationTypeController
             throw new \Exception($ip_service->getErrorMessage());
         }
 
-        $user = new User($uName, $uPassword);
-        if (!is_object($user) || !($user instanceof User) || $user->isError()) {
-            switch ($user->getError()) {
-                case USER_SESSION_EXPIRED:
-                    throw new \Exception(t('Your session has expired. Please sign in again.'));
-                    break;
-                case USER_NON_VALIDATED:
-                    throw new \Exception(
-                        t(
-                            'This account has not yet been validated. Please check the email associated with this account and follow the link it contains.'));
-                    break;
-                case USER_INVALID:
-                    // Log failed auth
-                    $ip_service->logFailedLogin();
-                    if ($ip_service->failedLoginsThresholdReached()) {
-                        $ip_service->addToBlacklistForThresholdReached();
-                        throw new \Exception($ip_service->getErrorMessage());
-                    }
 
-                    if ($this->isPasswordReset()) {
-                        Session::set('uPasswordResetUserName', $this->post('uName'));
-                        $this->redirect('/login/', $this->getAuthenticationType()->getAuthenticationTypeHandle(), 'required_password_upgrade');
-                    }
+        $loginService = $this->app->make(LoginService::class);
 
-                    if (Config::get('concrete.user.registration.email_registration')) {
-                        throw new \Exception(t('Invalid email address or password.'));
-                    } else {
-                        throw new \Exception(t('Invalid username or password.'));
-                    }
-                    break;
-                case USER_INACTIVE:
-                    throw new \Exception(t(Config::get('concrete.user.deactivation.message')));
-                    break;
-            }
+
+        try {
+            $user = $loginService->login($uName, $uPassword);
+        } catch (UserPasswordResetException $e) {
+            Session::set('uPasswordResetUserName', $this->post('uName'));
+            $this->redirect('/login/', $this->getAuthenticationType()->getAuthenticationTypeHandle(), 'required_password_upgrade');
+        } catch (UserException $e) {
+            $this->handleFailedLogin($loginService, $uName, $uPassword, $e);
         }
+
+        if ($user->isError()) {
+            throw new UserMessageException(t('Unknown login error occurred. Please try again.'));
+        }
+
         if (isset($post['uMaintainLogin']) && $post['uMaintainLogin']) {
             $user->setAuthTypeCookie('concrete');
         }
 
+        $loginService->logLoginAttempt($uName);
+
         return $user;
+    }
+
+    protected function handleFailedLogin(LoginService $loginService, $uName, $uPassword, UserException $e)
+    {
+        if ($e instanceof InvalidCredentialsException) {
+            // Track the failed login
+            try {
+                $loginService->failLogin($uName, $uPassword);
+            } catch (FailedLoginThresholdExceededException $e) {
+                $loginService->logLoginAttempt($uName, ['Failed Login Threshold Exceeded', $e->getMessage()]);
+
+                // Rethrow the failed threshold error
+                throw $e;
+            } catch (UserDeactivatedException $e) {
+                $loginService->logLoginAttempt($uName, ['User Deactivated', $e->getMessage()]);
+
+                // Rethrow the user deactivated exception
+                throw $e;
+            }
+        }
+
+        $loginService->logLoginAttempt($uName, ['Invalid Credentials', $e->getMessage()]);
+
+        // Rethrow the exception
+        throw $e;
     }
 
     private function isPasswordReset()

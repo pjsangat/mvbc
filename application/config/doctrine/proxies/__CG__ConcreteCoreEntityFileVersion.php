@@ -594,6 +594,17 @@ class Version extends \Concrete\Core\Entity\File\Version implements \Doctrine\OR
     /**
      * {@inheritDoc}
      */
+    public function hasPublicURL()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'hasPublicURL', []);
+
+        return parent::hasPublicURL();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getDownloadURL()
     {
 

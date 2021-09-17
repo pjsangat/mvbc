@@ -4,6 +4,7 @@ namespace Concrete\Core\Mail;
 
 use Concrete\Core\Application\Application;
 use Concrete\Core\Entity\File\File;
+use Concrete\Core\Logging\Channels;
 use Concrete\Core\Logging\GroupLogger;
 use Concrete\Core\Support\Facade\Application as ApplicationFacade;
 use Exception;
@@ -312,7 +313,11 @@ class Service
             $this->from($from[0], isset($from[1]) ? $from[1] : null);
         }
         $this->template = $template;
-        $this->subject = $subject;
+
+        if (isset($subject)) {
+            $this->subject = $subject;
+        }
+
         $this->body = (isset($body) && is_string($body)) ? $body : false;
         $this->bodyHTML = (isset($bodyHTML) && is_string($bodyHTML)) ? $bodyHTML : false;
     }
@@ -496,8 +501,7 @@ class Service
     /**
      * Should an exception be thrown if the delivery fails (if false, the sendMail() method will simply return false on failure).
      *
-     * @param bool $testing
-     * @param mixed $throwOnFailure
+     * @param bool $throwOnFailure
      *
      * @return $this
      */
@@ -641,7 +645,7 @@ class Service
             if ($this->getTesting()) {
                 throw $sendError;
             }
-            $l = new GroupLogger(LOG_TYPE_EXCEPTIONS, Logger::CRITICAL);
+            $l = new GroupLogger(Channels::CHANNEL_EXCEPTIONS, Logger::CRITICAL);
             $l->write(t('Mail Exception Occurred. Unable to send mail: ') . $sendError->getMessage());
             $l->write($sendError->getTraceAsString());
             if ($config->get('concrete.log.emails')) {
@@ -659,7 +663,7 @@ class Service
 
         // add email to log
         if ($config->get('concrete.log.emails') && !$this->getTesting()) {
-            $l = new GroupLogger(LOG_TYPE_EMAILS, Logger::INFO);
+            $l = new GroupLogger(Channels::CHANNEL_EMAIL, Logger::NOTICE);
             if ($config->get('concrete.email.enabled')) {
                 if ($sendError === null) {
                     $l->write('**' . t('EMAILS ARE ENABLED. THIS EMAIL HAS BEEN SENT') . '**');
@@ -740,6 +744,7 @@ class Service
             $result = new MimePart($this->body);
             $result->setType(Mime::TYPE_TEXT);
             $result->setCharset(APP_CHARSET);
+            $result->setEncoding(Mime::ENCODING_QUOTEDPRINTABLE);
         }
 
         return $result;
@@ -773,6 +778,7 @@ class Service
             $html = new MimePart($this->bodyHTML);
             $html->setType(Mime::TYPE_HTML);
             $html->setCharset(APP_CHARSET);
+            $html->setEncoding(Mime::ENCODING_QUOTEDPRINTABLE);
             $inlineAttachments = [];
             foreach ($this->attachments as $attachment) {
                 if ($this->isInlineAttachment($attachment)) {

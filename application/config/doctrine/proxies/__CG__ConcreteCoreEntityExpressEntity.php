@@ -587,6 +587,17 @@ class Entity extends \Concrete\Core\Entity\Express\Entity implements \Doctrine\O
     /**
      * {@inheritDoc}
      */
+    public function getForm($name)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getForm', [$name]);
+
+        return parent::getForm($name);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getEntityResultsNodeId()
     {
 

@@ -1,6 +1,7 @@
 <?php
 namespace Concrete\Core\Form\Service\Widget;
 
+use Concrete\Core\Http\ResponseAssetGroup;
 use Concrete\Core\Support\Facade\Application;
 use DateTime as PHPDateTime;
 use Exception;
@@ -93,7 +94,7 @@ class DateTime
      *
      * @return string
      */
-    public function datetime($field, $value = null, $includeActivation = false, $calendarAutoStart = true, $classes = null, $timeResolution = 60, array $datePickerOptions = array())
+    public function datetime($field, $value = null, $includeActivation = false, $calendarAutoStart = true, $classes = null, $timeResolution = 60, array $datePickerOptions = [])
     {
         $app = Application::getFacadeApplication();
         $dh = $app->make('helper/date');
@@ -282,6 +283,8 @@ class DateTime
 
         // Create the Javascript for the calendar
         if ($calendarAutoStart) {
+            $assetList = ResponseAssetGroup::get();
+            $assetList->requireAsset('jquery/ui');
             $dateFormat = json_encode($dh->getJQueryUIDatePickerFormat($shownDateFormat));
             if ($classes) {
                 $beforeShow = 'beforeShow: function() { $(\'#ui-datepicker-div\').addClass(' . json_encode((string) $classes) . '); },';
@@ -309,8 +312,8 @@ $(function() {
         $(inst.settings.altField).val('');
       }
     }
-  },{$datePickerOptionsAsJSON})).datepicker('setDate', $defaultDateJs);
-})
+  },{$datePickerOptionsAsJSON})).datepicker('setDate', $defaultDateJs).attr('autocomplete', 'off');
+});
 </script>
 EOT;
         }
@@ -345,7 +348,7 @@ EOT;
      *
      * @return string
      */
-    public function date($field, $value = null, $calendarAutoStart = true, array $datePickerOptions = array())
+    public function date($field, $value = null, $calendarAutoStart = true, array $datePickerOptions = [])
     {
         $app = Application::getFacadeApplication();
         $dh = $app->make('helper/date');
@@ -388,6 +391,8 @@ EOT;
 
         // Create the Javascript for the calendar
         if ($calendarAutoStart) {
+            $assetList = ResponseAssetGroup::get();
+            $assetList->requireAsset('jquery/ui');
             $dateFormat = json_encode($dh->getJQueryUIDatePickerFormat($shownDateFormat));
             if ($dateTime === null) {
                 $defaultDateJs = "''";
@@ -409,7 +414,7 @@ $(function() {
         $(inst.settings.altField).val('');
       }
     }
-  },{$datePickerOptionsAsJSON})).datepicker('setDate', $defaultDateJs);
+  },{$datePickerOptionsAsJSON})).datepicker('setDate', $defaultDateJs).attr('autocomplete', 'off');
 });
 </script>
 EOT;

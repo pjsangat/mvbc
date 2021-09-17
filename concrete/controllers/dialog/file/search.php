@@ -24,15 +24,19 @@ class Search extends BackendInterfaceController
 
     public function view()
     {
-        $search = new FileFolder();
+        $search = $this->app->build(FileFolder::class);
         $search->search();
         $result = $search->getSearchResultObject();
+
+        if ($this->request->query->get('mode') == 'selectMultiple') {
+            $this->set('selectMultiple', true);
+        }
 
         if (is_object($result)) {
             $this->set('result', $result);
         }
 
-        $header = new Header();
+        $header = $this->app->build(Header::class);
         $header->setIncludeBreadcrumb(true);
         $this->set('header', $header);
         $this->requireAsset('core/file-manager');

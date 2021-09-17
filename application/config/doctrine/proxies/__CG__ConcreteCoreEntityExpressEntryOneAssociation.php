@@ -198,17 +198,6 @@ class OneAssociation extends \Concrete\Core\Entity\Express\Entry\OneAssociation 
     /**
      * {@inheritDoc}
      */
-    public function clearSelectedEntry()
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'clearSelectedEntry', []);
-
-        return parent::clearSelectedEntry();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function getAssociation()
     {
 
@@ -312,12 +301,12 @@ class OneAssociation extends \Concrete\Core\Entity\Express\Entry\OneAssociation 
     /**
      * {@inheritDoc}
      */
-    public function removeSelectedEntry(\Concrete\Core\Entity\Express\Entry $entry)
+    public function getAssociationEntry(\Concrete\Core\Entity\Express\Entry $entry)
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'removeSelectedEntry', [$entry]);
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getAssociationEntry', [$entry]);
 
-        return parent::removeSelectedEntry($entry);
+        return parent::getAssociationEntry($entry);
     }
 
 }

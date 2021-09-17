@@ -417,7 +417,7 @@ class Entity implements CategoryObjectInterface, ObjectInterface, ExportableInte
     }
 
     /**
-     * @return mixed
+     * @return Association[]
      */
     public function getAssociations()
     {
@@ -446,6 +446,15 @@ class Entity implements CategoryObjectInterface, ObjectInterface, ExportableInte
     public function setForms($forms)
     {
         $this->forms = $forms;
+    }
+
+    public function getForm($name)
+    {
+        foreach($this->getForms() as $form) {
+            if ($form->getName() == $name) {
+                return $form;
+            }
+        }
     }
 
     /**

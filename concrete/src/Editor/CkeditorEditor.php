@@ -2,17 +2,19 @@
 
 namespace Concrete\Core\Editor;
 
+use Concrete\Core\Application\Application;
 use Concrete\Core\Http\Request;
 use Concrete\Core\Http\ResponseAssetGroup;
 use Concrete\Core\Localization\Localization;
 use Concrete\Core\Page\Theme\Theme as PageTheme;
 use Concrete\Core\Site\Config\Liaison as Repository;
+use Concrete\Core\Site\Service;
 use Concrete\Core\Utility\Service\Identifier;
 use Page;
 use Permissions;
 use stdClass;
 use URL;
-use User;
+use Concrete\Core\User\User;
 
 class CkeditorEditor implements EditorInterface
 {
@@ -69,18 +71,30 @@ class CkeditorEditor implements EditorInterface
     protected $styles;
 
     /**
+     * @var \Concrete\Core\Application\Application
+     */
+    protected $app;
+
+    /**
+     * @var \Concrete\Core\Site\Service
+     */
+    private $site;
+
+    /**
      * Initialize the instance.
      *
      * @param Repository $config
      * @param PluginManager $pluginManager
      * @param array $styles
      */
-    public function __construct(Repository $config, PluginManager $pluginManager, $styles)
+    public function __construct(Repository $config, Service $site, PluginManager $pluginManager, $styles, Application $app)
     {
         $this->config = $config;
         $this->pluginManager = $pluginManager;
         $this->assets = ResponseAssetGroup::get();
         $this->styles = $styles;
+        $this->app = $app;
+        $this->site = $site;
     }
 
     /**
@@ -144,13 +158,22 @@ class CkeditorEditor implements EditorInterface
             if (CKEDITOR.stylesSet.get('concrete5styles') === null) {
                 CKEDITOR.stylesSet.add('concrete5styles', {$this->getStylesJson()});
             }
-            var ckeditor = $(identifier).ckeditor({$options}).editor;
+            var element = $(identifier),
+                form = element.closest('form'),
+                ckeditor = element.ckeditor({$options}).editor;
+            function resetMode() {
+                if (ckeditor.mode === 'source' && ckeditor.setMode) {
+                    ckeditor.setMode('wysiwyg');
+                }
+            }
             ckeditor.on('blur',function(){
                 return false;
             });
             ckeditor.on('remove', function(){
+                form.off('submit', resetMode);
                 $(this).destroy();
             });
+            form.on('submit', resetMode);
             if (CKEDITOR.env.ie) {
                 ckeditor.on('ariaWidget', function (e) {
                     setTimeout(function() {
@@ -204,7 +227,7 @@ EOL;
 
         $html = sprintf(
             '<textarea id="%s_content" style="display:none;" name="%s"></textarea>' .
-            '<div contenteditable="true" id="%s">%s</div>',
+            '<div id="%s">%s</div>',
             $identifier,
             $key,
             $identifier,
@@ -215,7 +238,6 @@ EOL;
             $identifier,
             [
                 'startupFocus' => true,
-                'disableAutoInline' => true,
             ]
         );
 
@@ -229,10 +251,20 @@ EOL;
      */
     public function outputStandardEditor($key, $content = null)
     {
-        $options = [
-            'disableAutoInline' => true,
-        ];
+        return $this->outputEditorWithOptions($key, [], $content);
+    }
 
+    /**
+     * Generate the HTML to be placed in a page to display the editor.
+     *
+     * @param string $key the name of the field to be used to POST the editor content
+     * @param array $options custom options
+     * @param string|null $content The initial value of the editor content
+     *
+     * @return string
+     */
+    public function outputEditorWithOptions($key, array $options = [], $content = null)
+    {
         $pluginManager = $this->getPluginManager();
         if ($pluginManager->isSelected('sourcearea')) {
             $pluginManager->deselect('sourcedialog');
@@ -261,9 +293,7 @@ EOL;
      */
     public function outputStandardEditorInitJSFunction()
     {
-        $options = [
-            'disableAutoInline' => true,
-        ];
+        $options = [];
 
         $pluginManager = $this->getPluginManager();
         if ($pluginManager->isSelected('sourcearea')) {
@@ -283,19 +313,19 @@ EOL;
         $this->config->save('editor.concrete.enable_filemanager', (bool) $request->request->get('enable_filemanager'));
         $this->config->save('editor.concrete.enable_sitemap', (bool) $request->request->get('enable_sitemap'));
 
-        $selected = $this->config->get('editor.ckeditor4.plugins.selected_hidden');
+        // Load in selected_hidden plugins from the default site
+        $defaultConfig = $this->site->getDefault()->getConfigRepository();
+        $selected = (array) $defaultConfig->get('editor.ckeditor4.plugins.selected_hidden', []);
+
+        // Merge in plugins selected in the dashboard form
         $post = $request->request->get('plugin');
         if (is_array($post)) {
             $selected = array_merge($selected, $post);
         }
-        $plugins = [];
-        foreach ($selected as $plugin) {
-            if ($this->pluginManager->isAvailable($plugin)) {
-                $plugins[] = $plugin;
-            }
-        }
 
-        $this->config->save('editor.ckeditor4.plugins.selected', $plugins);
+        // Filter out plugins that aren't available
+        $selected = array_filter($selected, [$this->pluginManager, 'isAvailable']);
+        $this->config->save('editor.ckeditor4.plugins.selected', $selected);
     }
 
     /**
@@ -449,6 +479,7 @@ EOL;
         <script type="text/javascript">
         $(function() {
             var initEditor = {$jsFunc};
+            $('#{$identifier}').attr('contenteditable', 'true');
             initEditor('#{$identifier}');
          });
         </script>
@@ -488,7 +519,7 @@ EOL;
     {
         $obj = new stdClass();
         $obj->snippets = [];
-        $u = new User();
+        $u = $this->app->make(User::class);
         if ($u->isRegistered()) {
             $snippets = \Concrete\Core\Editor\Snippet::getActiveList();
             foreach ($snippets as $sns) {

@@ -3,6 +3,7 @@
 namespace Concrete\Core\File;
 
 use Concrete\Core\Application\Application;
+use Concrete\Core\File\Import\ProcessorManager;
 use Concrete\Core\File\StorageLocation\StorageLocation;
 use Concrete\Core\File\StorageLocation\StorageLocationInterface;
 use Concrete\Core\Foundation\Service\Provider as ServiceProvider;
@@ -55,6 +56,19 @@ class FileServiceProvider extends ServiceProvider
                     'parentDirectory' => $app->make('helper/file')->getTemporaryDirectory(),
                 ]
             );
+        });
+
+        $this->app->bind(ProcessorManager::class, function (Application $app) {
+            $config = $app->make('config');
+            $processorManager = $app->build(ProcessorManager::class);
+            foreach ($config->get('app.import_processors') as $processorClass) {
+                if ($processorClass) {
+                    $processor = $app->make($processorClass);
+                    $processorManager->registerProcessor($processor->readConfiguration($config));
+                }
+            }
+
+            return $processorManager;
         });
     }
 }

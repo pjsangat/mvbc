@@ -64,10 +64,10 @@ class Type extends \Concrete\Core\Entity\File\Image\Thumbnail\Type\Type implemen
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return ['__isInitialized__', 'ftTypeID', 'ftTypeHandle', 'ftTypeName', 'ftTypeWidth', 'ftTypeHeight', 'ftTypeIsRequired', 'ftTypeSizingMode', 'ftUpscalingEnabled', 'ftLimitedToFileSets', 'ftAssociatedFileSets'];
+            return ['__isInitialized__', 'ftTypeID', 'ftTypeHandle', 'ftTypeName', 'ftTypeWidth', 'ftTypeHeight', 'ftTypeIsRequired', 'ftTypeSizingMode', 'ftUpscalingEnabled', 'ftLimitedToFileSets', 'ftAssociatedFileSets', 'ftKeepAnimations', 'ftSaveAreaBackgroundColor'];
         }
 
-        return ['__isInitialized__', 'ftTypeID', 'ftTypeHandle', 'ftTypeName', 'ftTypeWidth', 'ftTypeHeight', 'ftTypeIsRequired', 'ftTypeSizingMode', 'ftUpscalingEnabled', 'ftLimitedToFileSets', 'ftAssociatedFileSets'];
+        return ['__isInitialized__', 'ftTypeID', 'ftTypeHandle', 'ftTypeName', 'ftTypeWidth', 'ftTypeHeight', 'ftTypeIsRequired', 'ftTypeSizingMode', 'ftUpscalingEnabled', 'ftLimitedToFileSets', 'ftAssociatedFileSets', 'ftKeepAnimations', 'ftSaveAreaBackgroundColor'];
     }
 
     /**
@@ -391,6 +391,50 @@ class Type extends \Concrete\Core\Entity\File\Image\Thumbnail\Type\Type implemen
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getAssociatedFileSets', []);
 
         return parent::getAssociatedFileSets();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setKeepAnimations($value)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setKeepAnimations', [$value]);
+
+        return parent::setKeepAnimations($value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isKeepAnimations()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'isKeepAnimations', []);
+
+        return parent::isKeepAnimations();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setSaveAreaBackgroundColor($color)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setSaveAreaBackgroundColor', [$color]);
+
+        return parent::setSaveAreaBackgroundColor($color);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getSaveAreaBackgroundColor()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getSaveAreaBackgroundColor', []);
+
+        return parent::getSaveAreaBackgroundColor();
     }
 
     /**

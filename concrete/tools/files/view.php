@@ -1,6 +1,6 @@
 <?php
 defined('C5_EXECUTE') or die("Access Denied.");
-$u = new User();
+$u = Core::make(Concrete\Core\User\User::class);
 $form = Loader::helper('form');
 
 $f = File::getByID($_REQUEST['fID']);
@@ -31,7 +31,7 @@ if ($to->getPackageHandle() != '') {
 </div>
 
 <div class="dialog-buttons">
-<form method="post" action="<?=REL_DIR_FILES_TOOLS_REQUIRED?>/files/download?fID=<?=$f->getFileID()?>&fvID=<?=$f->getFileVersionID()?>" style="margin: 0px">
+<form method="post" action="<?= URL::to('ccm/system/file/download') ?>?fID=<?=$f->getFileID()?>&fvID=<?=$f->getFileVersionID()?>" style="margin: 0px">
 <?=$form->submit('submit', t('Download'), array('class' => 'btn btn-primary pull-right'))?>
 </form>
 </div>

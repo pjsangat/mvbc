@@ -16,7 +16,7 @@ use \Concrete\Core\Area\SubArea;
 $arHandle = $a->getAreaHandle();
 $c = $a->getAreaCollectionObject();
 $cID = $c->getCollectionID();
-$u = new User();
+$u = Core::make(Concrete\Core\User\User::class);
 $ap = new Permissions($a);
 $cp = new Permissions($c);
 $class = 'ccm-area-footer';
@@ -51,7 +51,7 @@ $class = 'ccm-area-footer';
                         }
                     }
                     if ($canEditAreaPermissions) {
-                        ?><li><a dialog-title="<?=t('Area Permissions')?>" class="dialog-launch" dialog-modal="false" dialog-width="425" dialog-height="430" id="menuAreaStyle<?=$a->getAreaID()?>" href="<?=REL_DIR_FILES_TOOLS_REQUIRED?>/edit_area_popup?cID=<?=$c->getCollectionID()?>&arHandle=<?=urlencode($a->getAreaHandle())?>&atask=groups"><?=t("Permissions")?></a></li><?php
+                        ?><li><a dialog-title="<?=t('Area Permissions')?>" class="dialog-launch" dialog-modal="false" dialog-width="425" dialog-height="430" id="menuAreaStyle<?=$a->getAreaID()?>" href="<?= URL::to('/ccm/system/dialogs/area/edit/permissions') ?>?cID=<?=$c->getCollectionID()?>&arHandle=<?=urlencode($a->getAreaHandle())?>"><?=t("Permissions")?></a></li><?php
                     }
                     if ($a instanceof SubArea) {
                         $pk = PermissionKey::getByHandle('manage_layout_presets');

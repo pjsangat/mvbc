@@ -287,7 +287,7 @@ class Locale extends \Concrete\Core\Entity\Site\Locale implements \Doctrine\ORM\
     /**
      * {@inheritDoc}
      */
-    public function setSiteTree(\Concrete\Core\Entity\Site\SiteTree $tree = NULL)
+    public function setSiteTree($tree)
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'setSiteTree', [$tree]);

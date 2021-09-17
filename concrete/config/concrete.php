@@ -6,9 +6,9 @@ return [
      *
      * @var string
      */
-    'version' => '8.4.5',
-    'version_installed' => '8.4.5',
-    'version_db' => '20180717000000', // the key of the latest database migration
+    'version' => '8.5.4',
+    'version_installed' => '8.5.4',
+    'version_db' => '20200609145307', // the key of the latest database migration
 
     /*
      * Installation status
@@ -26,6 +26,11 @@ return [
      * The current Charset
      */
     'charset' => 'UTF-8',
+
+    /*
+     * The byte-order-mark for the current charset
+     */
+    'charset_bom' => "\xEF\xBB\xBF",
 
     /*
      * Maintenance mode
@@ -50,7 +55,7 @@ return [
          *
          * @var string (message|debug)
          */
-        'detail' => 'message',
+        'detail' => 'debug',
 
         /*
          * Error reporting level
@@ -86,6 +91,33 @@ return [
         'extensions' => '*.flv;*.jpg;*.gif;*.jpeg;*.ico;*.docx;*.xla;*.png;*.psd;*.swf;*.doc;*.txt;*.xls;*.xlsx;' .
             '*.csv;*.pdf;*.tiff;*.rtf;*.m4a;*.mov;*.wmv;*.mpeg;*.mpg;*.wav;*.3gp;*.avi;*.m4v;*.mp4;*.mp3;*.qt;*.ppt;' .
             '*.pptx;*.kml;*.xml;*.svg;*.webm;*.ogg;*.ogv',
+        /*
+         * Disallowed file extension list (takes the precedence over the extensions whitelist).
+         *
+         * @var string semi-colon separated.
+         */
+        'extensions_blacklist' => '*.php;*.php2;*.php3;*.php4;*.php5;*.php7;*.php8;*.phtml;*.phar;*.htaccess;*.pl;*.phpsh;*.pht;*.shtml;*.cgi',
+
+        'chunking' => [
+            // Enable uploading files in chunks?
+            'enabled' => true,
+            // The chunk size (if empty we'll automatically determine it)
+            'chunkSize' => null,
+        ],
+    ],
+
+    /*
+     * ------------------------------------------------------------------------
+     * Export settings
+     * ------------------------------------------------------------------------
+     */
+    'export' => [
+        'csv' => [
+            // Include the BOM (byte-order mark) in generated CSV files?
+            // @var bool
+            'include_bom' => false,
+            'datetime_format' => 'ATOM',
+        ],
     ],
 
     /*
@@ -231,7 +263,28 @@ return [
                             'filePermissions' => FILE_PERMISSIONS_MODE_COMPUTED,
                         ],
                     ],
+                    'redis' => [
+                        'class' => \Concrete\Core\Cache\Driver\RedisStashDriver::class,
+                        'options' => [
+                            /* Example configuration for servers
+                            'servers' => [
+                                [
+                                    'server' => 'localhost',
+                                    'port' => 6379,
+                                    'ttl' => 10 //Connection Timeout - not TTL for objects
+                                ],
+                                [
+                                    'server' => 'outside.server',
+                                    'port' => 6379,
+                                    'ttl' => 10
+                                ],
+                            ],*/
+                            'prefix' => 'c5_overrides',
+                            'database' => 0, // Use different Redis Databases - optional
+                        ],
+                    ],
                 ],
+                'preferred_driver' => 'core_filesystem', // Use this to specify a preferred driver
             ],
             'expensive' => [
                 'drivers' => [
@@ -239,7 +292,6 @@ return [
                         'class' => '\Stash\Driver\Ephemeral',
                         'options' => [],
                     ],
-
                     'core_filesystem' => [
                         'class' => \Concrete\Core\Cache\Driver\FileSystemStashDriver::class,
                         'options' => [
@@ -248,7 +300,15 @@ return [
                             'filePermissions' => FILE_PERMISSIONS_MODE_COMPUTED,
                         ],
                     ],
+                    'redis' => [
+                        'class' => \Concrete\Core\Cache\Driver\RedisStashDriver::class,
+                        'options' => [
+                            'prefix' => 'c5_expensive',
+                            'database' => 0, // Use different Redis Databases - optional
+                        ],
+                    ],
                 ],
+                'preferred_driver' => 'core_filesystem', // Use this to specify a preferred driver
             ],
             'object' => [
                 'drivers' => [
@@ -256,7 +316,15 @@ return [
                         'class' => '\Stash\Driver\Ephemeral',
                         'options' => [],
                     ],
+                    'redis' => [
+                        'class' => \Concrete\Core\Cache\Driver\RedisStashDriver::class,
+                        'options' => [
+                            'prefix' => 'c5_object',
+                            'database' => 0, // Use different Redis Databases - optional
+                        ],
+                    ],
                 ],
+                'preferred_driver' => 'core_ephemeral', // Use this to specify a preferred driver
             ],
         ],
 
@@ -277,35 +345,69 @@ return [
      */
     'log' => [
         /*
-         * Log emails
+         * Whether to log emails
          *
          * @var bool
          */
         'emails' => true,
 
         /*
-         * Log Errors
+         * Whether to log Errors
          *
          * @var bool
          */
         'errors' => true,
 
         /*
-         * Log Spam
+         * Whether to log Spam
          *
          * @var bool
          */
         'spam' => false,
 
-        'queries' => [
-            /*
-             * Whether to log database queries or not.
-             *
-             * @var bool
-             */
-            'log' => false,
+        /*
+         * Whether to log REST API requests headers
+         *
+         * @var bool
+         */
+        'api' => false,
 
-            'clear_on_reload' => false,
+        'enable_dashboard_report' => true,
+
+        'configuration' => [
+            /*
+             * Configuration mode
+             *
+             * @var string simple|advanced
+             */
+            'mode' => 'simple',
+            'simple' => [
+                /*
+                 * What log level to store core logs in the database
+                 * @var string
+                 */
+                'core_logging_level' => 'NOTICE',
+
+                /*
+                 * Which handle to use
+                 *
+                 * @var string (database|file)
+                 */
+                'handler' => 'database',
+
+                'file' => [
+                    /*
+                     * File path to store logs
+                     *
+                     * @var string
+                     */
+                    'file' => '',
+                ],
+            ],
+
+            'advanced' => [
+                'configuration' => [],
+            ],
         ],
     ],
     'jobs' => [
@@ -370,7 +472,6 @@ return [
          * @var string "auto", true or false
          */
         'store_form_submissions' => 'auto',
-
     ],
 
     /*
@@ -471,6 +572,12 @@ return [
          */
         'default_thumbnail_format' => 'auto',
         /*
+         * The threshold (total number of pixels - width x height x number of frames)
+         * after which we'll reload images instead of creating in-memory clones.
+         * If empty: unlimited
+         */
+        'inplace_image_operations_limit' => 4194304,
+        /*
          * @var string (now|async)
          */
         'basic_thumbnailer_generation_strategy' => 'now',
@@ -482,6 +589,19 @@ return [
          * @var bool
          */
         'enable_move_blocktypes_across_sets' => false,
+        /*
+         * Control whether or not the image editor should add crossOrigin when loading images from external sources (s3, etc)
+         */
+        'image_editor_cors_policy' => [
+            'enable_cross_origin' => false,
+            'anonymous_request' => true,
+        ],
+        /*
+         * Check whether to add a "generator" tag with the concrete5 version to the site pages
+         *
+         * @var bool
+         */
+        'generator_tag_display_in_header' => true,
     ],
 
     'theme' => [
@@ -497,6 +617,11 @@ return [
             'get_available_updates' => 'http://www.concrete5.org/tools/update_core',
             'inspect_update' => 'http://www.concrete5.org/tools/inspect_update',
         ],
+        // Set to true to skip checking if there's a newer core version available (useful for example if the core is upgraded via composer)
+        'skip_core' => false,
+        // List of package handles that shouldn't be checked for new versions in marketplace (useful for example if the core is upgraded via composer)
+        // Set to true to skip all the packages
+        'skip_packages' => [],
     ],
     'paths' => [
         'trash' => '/!trash',
@@ -533,7 +658,47 @@ return [
             'use_exif_data_to_rotate_images' => false,
             'manipulation_library' => 'gd',
             'create_high_dpi_thumbnails' => true,
+            /*
+             * The style of preview image used in the file_manager
+             *
+             * @var string 'small'(default,30x30), 'large(60x60)' or 'full(size of file_manager_listing)'
+             */
+            'preview_image_size' => 'small',
+            /*
+             * Show file_manager_detail thumbnail as preview image in popover
+             *
+             * @var boolean
+             */
+            'preview_image_popover' => true,
+            // SVG sanitization
+            'svg_sanitization' => [
+                // The operation that the SVG sanitizer should perform.
+                // This must be value of one of the Concrete\Core\File\Import\Processor\SvgProcessor::ACTION_... constants
+                'action' => 'sanitize',
+                // Space-separated list of tags to be kept
+                'allowed_tags' => '',
+                // Space-separated list of attributes to be kept
+                'allowed_attributes' => '',
+            ],
+            /*
+             * Background color of the Image Editor saveArea
+             * Leave empty to use a transparent background
+             *
+             * @var string
+             */
+            'image_editor_save_area_background_color' => '',
         ],
+        /*
+         * Options for the results per page dropdown
+         *
+         * @var array
+         */
+        'items_per_page_options' => [10, 25, 50, 100, 250],
+        /*
+         * Default number of results per page
+         *
+         * @var int
+         */
         'results' => 10,
     ],
 
@@ -673,14 +838,29 @@ return [
     'session' => [
         'name' => 'CONCRETE5',
         'handler' => 'file',
+        'redis' => [
+            'database' => 1, // Use different Redis Databases - optional
+        ],
         'save_path' => null,
+        // Minimum duration (in seconds) of an "unoutched" session
         'max_lifetime' => 7200,
+        // gc_probability and gc_divisor together define the probability to
+        // cleanup expided sessions ("garbage collection").
+        // Example: if gc_probability is 1 and gc_divisor is 100, on average we'll have 1 GC every 100 requests (1%)
+        // Example: if gc_probability is 5 and gc_divisor is 20, on average we'll have 1 GC every 20 requests (25%)
+        'gc_probability' => 1,
+        'gc_divisor' => 100,
         'cookie' => [
             'cookie_path' => false, // set a specific path here if you know it, otherwise it'll default to relative
             'cookie_lifetime' => 0,
             'cookie_domain' => false,
             'cookie_secure' => false,
             'cookie_httponly' => true,
+            'cookie_raw' => false,
+            'cookie_samesite' => null,
+        ],
+        'remember_me' => [
+            'lifetime' => 1209600, // 2 weeks in seconds
         ],
     ],
 
@@ -773,13 +953,18 @@ return [
             'allowed_characters' => [
                 'boundary' => 'A-Za-z0-9',
                 'middle' => 'A-Za-z0-9_\.',
-                'requirement_string' => 'A username may only contain letters, numbers, dots (not at the beginning/end), underscores (not at the beginning/end).',
-                'error_string' => 'A username may only contain letters, numbers, dots (not at the beginning/end), underscores (not at the beginning/end).',
+                'requirement_string' => 'A username may only contain letters, numbers, dots (not at the beginning/end), and underscores (not at the beginning/end).',
+                'error_string' => 'A username may only contain letters, numbers, dots (not at the beginning/end), and underscores (not at the beginning/end).',
             ],
         ],
         'password' => [
             'maximum' => 128,
             'minimum' => 5,
+            'required_special_characters' => 0,
+            'required_lower_case' => 0,
+            'required_upper_case' => 0,
+            'reuse' => 0,
+            'custom_regex' => [],
             'hash_portable' => false,
             'hash_cost_log2' => 12,
             'legacy_salt' => '',
@@ -797,6 +982,11 @@ return [
             'enable_login_threshold_deactivation' => false,
             'login' => [
                 'threshold' => 120, // in days
+            ],
+            'authentication_failure' => [
+                'enabled' => false,
+                'amount' => 5, // The number of failures
+                'duration' => 300, // In so many seconds
             ],
             'message' => 'This user is inactive. Please contact us regarding this account.',
         ],
@@ -845,17 +1035,12 @@ return [
             'invalidate_on_user_agent_mismatch' => true,
 
             'invalidate_on_ip_mismatch' => true,
-        ],
-        'ban' => [
-            'ip' => [
-                // Is the automatic ban system enabled?
-                'enabled' => true,
-                // Maximum number of login attempts before banning the IP address
-                'attempts' => 5,
-                // Time window (in seconds) for past failed login attempts
+
+            'invalidate_inactive_users' => [
+                // Is the automatically logout inactive users setting enabled?
+                'enabled' => false,
+                // Time window (in seconds) for inactive users to be automatically logout
                 'time' => 300,
-                // Ban duration (in minutes) when <attempts> failed logins occurred in the past <time> seconds
-                'length' => 10,
             ],
         ],
         'misc' => [
@@ -956,5 +1141,50 @@ return [
     'composer' => [
         // [float] The time in seconds until idle triggers a save (set to 0 to disable autosave)
         'idle_timeout' => 1,
+    ],
+
+    /*
+     * ------------------------------------------------------------------------
+     * API settings
+     * ------------------------------------------------------------------------
+     */
+    'api' => [
+        /*
+         * Enabled
+         *
+         * @var bool
+         */
+        'enabled' => false,
+
+        /**
+         * Which grant types do we allow to connect to the API.
+         *
+         * @var array
+         */
+        'grant_types' => [
+            'client_credentials' => true,
+            'authorization_code' => true,
+            'password_credentials' => false,
+            'refresh_token' => true,
+        ],
+    ],
+
+    'mutex' => [
+        'semaphore' => [
+            'priority' => 100,
+            'class' => Concrete\Core\System\Mutex\SemaphoreMutex::class,
+        ],
+        'file_lock' => [
+            'priority' => 50,
+            'class' => Concrete\Core\System\Mutex\FileLockMutex::class,
+        ],
+    ],
+
+    'social' => [
+        'additional_services' => [
+            // Add here a list of arrays like this:
+            // ['service_handle', 'Service Name', 'icon']
+            // Where 'icon' is the handle of a FontAwesome 4 icon (see https://fontawesome.com/v4.7.0/icons/ )
+        ],
     ],
 ];

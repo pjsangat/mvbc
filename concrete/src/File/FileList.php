@@ -2,14 +2,18 @@
 
 namespace Concrete\Core\File;
 
+use Concrete\Core\File\StorageLocation\StorageLocationFactory;
 use Concrete\Core\Search\ItemList\Database\AttributedItemList as DatabaseItemList;
 use Concrete\Core\Search\ItemList\Pager\Manager\FileListPagerManager;
 use Concrete\Core\Search\ItemList\Pager\PagerProviderInterface;
 use Concrete\Core\Search\ItemList\Pager\QueryString\VariableFactory;
 use Concrete\Core\Search\Pagination\PaginationProviderInterface;
 use Concrete\Core\Search\StickyRequest;
+use Concrete\Core\User\User;
+use Concrete\Core\Support\Facade\Application;
 use FileAttributeKey;
 use Pagerfanta\Adapter\DoctrineDbalAdapter;
+use Exception;
 
 class FileList extends DatabaseItemList implements PagerProviderInterface, PaginationProviderInterface
 {
@@ -35,7 +39,7 @@ class FileList extends DatabaseItemList implements PagerProviderInterface, Pagin
 
     public function __construct(StickyRequest $req = null)
     {
-        $u = new \User();
+        $u = Application::getFacadeApplication()->make(User::class);
         if ($u->isSuperUser()) {
             $this->ignorePermissions();
         }
@@ -157,6 +161,33 @@ class FileList extends DatabaseItemList implements PagerProviderInterface, Pagin
             }
             $this->query->andWhere($or);
         }
+    }
+
+    /**
+     * Filter the files by their storage location using a storage location object.
+     *
+     * @param \Concrete\Core\Entity\File\StorageLocation\StorageLocation|int $storageLocation storage location object
+     */
+    public function filterByStorageLocation($storageLocation) {
+        if ($storageLocation instanceof \Concrete\Core\Entity\File\StorageLocation\StorageLocation) {
+            $this->filterByStorageLocationID($storageLocation->getID());
+        } elseif (!is_object($storageLocation)) {
+            $this->filterByStorageLocationID($storageLocation);
+        } else {
+            throw new Exception(t('Invalid file storage location.'));
+        }
+    }
+
+    /**
+     * Filter the files by their storage location using a storage location id.
+     *
+     * @param int $fslID storage location id
+     */
+    public function filterByStorageLocationID($fslID)
+    {
+        $fslID = (int) $fslID;
+        $this->query->andWhere('f.fslID = :fslID');
+        $this->query->setParameter('fslID', $fslID);
     }
 
     /**

@@ -528,6 +528,28 @@ class Feed extends \Concrete\Core\Entity\Page\Feed implements \Doctrine\ORM\Prox
     /**
      * {@inheritDoc}
      */
+    public function setCheckPagePermissions($checkPagePermissions)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setCheckPagePermissions', [$checkPagePermissions]);
+
+        return parent::setCheckPagePermissions($checkPagePermissions);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function shouldCheckPagePermissions()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'shouldCheckPagePermissions', []);
+
+        return parent::shouldCheckPagePermissions();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getPageListObject()
     {
 

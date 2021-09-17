@@ -3,6 +3,7 @@ namespace Concrete\Core\File\Set;
 
 use Concrete\Core\Database\Connection\Connection;
 use Concrete\Core\Entity\File\File as FileEntity;
+use Concrete\Core\Entity\File\Image\Thumbnail\Type\Type as ThumbnailType;
 use Concrete\Core\Entity\File\Version as FileVersionEntity;
 use Concrete\Core\Support\Facade\Application;
 use Concrete\Core\Permission\Access\Entity\GroupCombinationEntity as GroupCombinationPermissionAccessEntity;
@@ -102,7 +103,7 @@ class Set
                     $queryBuilder->expr()->in('fsType',[self::TYPE_PRIVATE, self::TYPE_STARRED, self::TYPE_PUBLIC]),
                     $queryBuilder->expr()->eq('uID', $user->getUserID())
                 )
-            )->execute();
+            )->orderBy('fsName', 'ASC')->execute();
 
 
         while ($row = $results->fetch()) {
@@ -166,8 +167,9 @@ class Set
      */
     public static function createAndGetSet($fs_name, $fs_type, $fs_uid = false)
     {
+        $app = Facade::getFacadeApplication();
         if ($fs_uid === false) {
-            $u = new User();
+            $u = $app->make(User::class);
             $fs_uid = $u->uID;
         }
 
@@ -362,9 +364,10 @@ class Set
 
     public function getSavedSearches()
     {
+        $app = Facade::getFacadeApplication();
         $db = Database::connection();
         $sets = array();
-        $u = new User();
+        $u = $app->make(User::class);
         $r = $db->executeQuery(
             'SELECT * FROM FileSets WHERE fsType = ? AND uID = ? ORDER BY fsName ASC',
             array(self::TYPE_SAVED_SEARCH, $u->getUserID())
@@ -494,7 +497,7 @@ class Set
             $fe = new \Concrete\Core\File\Event\FileSetFile($file_set_file);
             $director = $app->make(EventDispatcherInterface::class);
             $director->dispatch('on_file_added_to_set', $fe);
-            if ($fileVersion !== null) {
+            if ($fileVersion !== null && $this->shouldRefreshFileThumbnails('add')) {
                 $fileVersion->refreshThumbnails(false);
             }
             $result = $file_set_file;
@@ -549,7 +552,7 @@ class Set
             $fe = new \Concrete\Core\File\Event\FileSetFile($file_set_file);
             $director = $app->make(EventDispatcherInterface::class);
             $director->dispatch('on_file_removed_from_set', $fe);
-            if ($fileVersion !== null) {
+            if ($fileVersion !== null && $this->shouldRefreshFileThumbnails('remove')) {
                 $fileVersion->refreshThumbnails(false);
             }
             $result = true;
@@ -680,5 +683,30 @@ class Set
         return $this->getFileSetID();
     }
 
+    /**
+     * Check if we should build the thumbnails for files added or removed to this file set should.
+     * 
+     * @param string $fileOperation 'add' or 'remove'
+     *
+     * @return bool
+     */
+    protected function shouldRefreshFileThumbnails($fileOperation)
+    {
+        $app = Application::getFacadeApplication();
+        $em = $app->make(EntityManagerInterface::class);
+        $qb = $em->createQueryBuilder();
+        $qb
+            ->select('ft.ftTypeID')
+            ->from(ThumbnailType::class, 'ft')
+            ->innerJoin('ft.ftAssociatedFileSets', 'ftfs')
+            ->andWhere($qb->expr()->eq('ftfs.ftfsFileSetID', ':fsID'))
+            ->setParameter('fsID', $this->getFileSetID())
+            ->andWhere($qb->expr()->eq('ft.ftLimitedToFileSets', ':limitedTo'))
+            ->setParameter('limitedTo', $fileOperation === 'add')
+            ->setMaxResults(1)
+        ;
+        $query = $qb->getQuery();
 
+        return $query->getOneOrNullResult($query::HYDRATE_SINGLE_SCALAR) !== null;
+    }
 }

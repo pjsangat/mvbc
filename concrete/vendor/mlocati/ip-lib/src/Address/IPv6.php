@@ -84,6 +84,7 @@ class IPv6 implements AddressInterface
     {
         $result = null;
         if (is_string($address) && strpos($address, ':') !== false && strpos($address, ':::') === false) {
+            $matches = null;
             if ($mayIncludePort && $address[0] === '[' && preg_match('/^\[(.+)\]:\d+$/', $address, $matches)) {
                 $address = $matches[1];
             }
@@ -93,8 +94,7 @@ class IPv6 implements AddressInterface
                     $address = substr($address, 0, $percentagePos);
                 }
             }
-            if (preg_match('/^([0:]+:ffff:)(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i', $address, $matches)) {
-                // IPv4 embedded in IPv6
+            if (preg_match('/^((?:[0-9a-f]*:+)+)(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i', $address, $matches)) {
                 $address6 = static::fromString($matches[1].'0:0', false);
                 if ($address6 !== null) {
                     $address4 = IPv4::fromString($matches[2], false);
@@ -213,7 +213,7 @@ class IPv6 implements AddressInterface
     /**
      * {@inheritdoc}
      *
-     * @see AddressInterface::toString()
+     * @see \IPLib\Address\AddressInterface::toString()
      */
     public function toString($long = false)
     {
@@ -232,6 +232,7 @@ class IPv6 implements AddressInterface
                         $this->getWords()
                     );
                     $shortAddress = implode(':', $chunks);
+                    $matches = null;
                     for ($i = 8; $i > 1; --$i) {
                         $search = '(?:^|:)'.rtrim(str_repeat('0:', $i), ':').'(?:$|:)';
                         if (preg_match('/^(.*?)'.$search.'(.*)$/', $shortAddress, $matches)) {
@@ -251,7 +252,7 @@ class IPv6 implements AddressInterface
     /**
      * {@inheritdoc}
      *
-     * @see AddressInterface::__toString()
+     * @see \IPLib\Address\AddressInterface::__toString()
      */
     public function __toString()
     {
@@ -261,7 +262,7 @@ class IPv6 implements AddressInterface
     /**
      * {@inheritdoc}
      *
-     * @see AddressInterface::getBytes()
+     * @see \IPLib\Address\AddressInterface::getBytes()
      */
     public function getBytes()
     {
@@ -299,7 +300,7 @@ class IPv6 implements AddressInterface
     /**
      * {@inheritdoc}
      *
-     * @see AddressInterface::getAddressType()
+     * @see \IPLib\Address\AddressInterface::getAddressType()
      */
     public function getAddressType()
     {
@@ -309,7 +310,7 @@ class IPv6 implements AddressInterface
     /**
      * {@inheritdoc}
      *
-     * @see AddressInterface::getDefaultReservedRangeType()
+     * @see \IPLib\Address\AddressInterface::getDefaultReservedRangeType()
      */
     public static function getDefaultReservedRangeType()
     {
@@ -319,7 +320,7 @@ class IPv6 implements AddressInterface
     /**
      * {@inheritdoc}
      *
-     * @see AddressInterface::getReservedRanges()
+     * @see \IPLib\Address\AddressInterface::getReservedRanges()
      */
     public static function getReservedRanges()
     {
@@ -389,7 +390,7 @@ class IPv6 implements AddressInterface
     /**
      * {@inheritdoc}
      *
-     * @see AddressInterface::getRangeType()
+     * @see \IPLib\Address\AddressInterface::getRangeType()
      */
     public function getRangeType()
     {
@@ -415,7 +416,7 @@ class IPv6 implements AddressInterface
     /**
      * Create an IPv4 representation of this address (if possible, otherwise returns null).
      *
-     * @return IPv4|null
+     * @return \IPLib\Address\IPv4|null
      */
     public function toIPv4()
     {
@@ -428,9 +429,35 @@ class IPv6 implements AddressInterface
     }
 
     /**
+     * Render this IPv6 address in the "mixed" IPv6 (first 12 bytes) + IPv4 (last 4 bytes) mixed syntax.
+     *
+     * @param bool $ipV6Long render the IPv6 part in "long" format?
+     * @param bool $ipV4Long render the IPv4 part in "long" format?
+     *
+     * @return string
+     *
+     * @example '::13.1.68.3'
+     * @example '0000:0000:0000:0000:0000:0000:13.1.68.3' when $ipV6Long is true
+     * @example '::013.001.068.003' when $ipV4Long is true
+     * @example '0000:0000:0000:0000:0000:0000:013.001.068.003' when $ipV6Long and $ipV4Long are true
+     *
+     * @see https://tools.ietf.org/html/rfc4291#section-2.2 point 3.
+     */
+    public function toMixedIPv6IPv4String($ipV6Long = false, $ipV4Long = false)
+    {
+        $myBytes = $this->getBytes();
+        $ipv6Bytes = array_merge(array_slice($myBytes, 0, 12), array(0xff, 0xff, 0xff, 0xff));
+        $ipv6String = static::fromBytes($ipv6Bytes)->toString($ipV6Long);
+        $ipv4Bytes = array_slice($myBytes, 12, 4);
+        $ipv4String = IPv4::fromBytes($ipv4Bytes)->toString($ipV4Long);
+
+        return preg_replace('/((ffff:ffff)|(\d+(\.\d+){3}))$/i', $ipv4String, $ipv6String);
+    }
+
+    /**
      * {@inheritdoc}
      *
-     * @see AddressInterface::getComparableString()
+     * @see \IPLib\Address\AddressInterface::getComparableString()
      */
     public function getComparableString()
     {
@@ -440,7 +467,7 @@ class IPv6 implements AddressInterface
     /**
      * {@inheritdoc}
      *
-     * @see AddressInterface::matches()
+     * @see \IPLib\Address\AddressInterface::matches()
      */
     public function matches(RangeInterface $range)
     {
@@ -450,7 +477,7 @@ class IPv6 implements AddressInterface
     /**
      * {@inheritdoc}
      *
-     * @see AddressInterface::getNextAddress()
+     * @see \IPLib\Address\AddressInterface::getNextAddress()
      */
     public function getNextAddress()
     {
@@ -475,7 +502,7 @@ class IPv6 implements AddressInterface
     /**
      * {@inheritdoc}
      *
-     * @see AddressInterface::getPreviousAddress()
+     * @see \IPLib\Address\AddressInterface::getPreviousAddress()
      */
     public function getPreviousAddress()
     {

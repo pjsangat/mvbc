@@ -1,11 +1,10 @@
 <?php
-
 namespace Concrete\Core\Multilingual\Service;
 
 use Concrete\Core\Localization\Localization;
 use Concrete\Core\Multilingual\Page\Section\Section;
 use Concrete\Core\Page\Page;
-use Concrete\Core\Session\SessionValidator;
+use Concrete\Core\Session\SessionValidatorInterface;
 use Concrete\Core\Support\Facade\Facade;
 use Concrete\Core\User\User;
 
@@ -22,18 +21,19 @@ class Detector
      *
      * @return Section|null
      */
-    public static function getPreferredSection()
+    public function getPreferredSection()
     {
         $app = Facade::getFacadeApplication();
         $site = $app->make('site')->getSite();
         $siteConfig = $site->getConfigRepository();
         $session = $app->make('session');
+        $detector = $app->make(Detector::class);
 
         $result = null;
         if ($result === null) {
             $locale = false;
             // Detect locale by value stored in session or cookie
-            if ($session->has('multilingual_default_locale')) {
+            if ($detector->canSetSessionValue() && $session->has('multilingual_default_locale')) {
                 $locale = $session->get('multilingual_default_locale');
             } else {
                 $cookie = $app->make('cookie');
@@ -51,7 +51,7 @@ class Detector
 
         if ($result === null) {
             // Detect locale by user's preferred language
-            $u = new \User();
+            $u = $app->make(User::class);
             if ($u->isRegistered()) {
                 $userDefaultLanguage = $u->getUserDefaultLanguage();
                 if ($userDefaultLanguage) {
@@ -87,16 +87,8 @@ class Detector
             }
         }
 
-        if ($result !== null) {
-            if ($siteConfig->get('multilingual.always_track_user_locale')) {
-                $storeLocale = true;
-            } else {
-                $sessionValidator = $app->make(SessionValidator::class);
-                $storeLocale = $sessionValidator->hasActiveSession();
-            }
-            if ($storeLocale) {
-                $session->set('multilingual_default_locale', $result[0]);
-            }
+        if ($result !== null && $detector->canSetSessionValue()) {
+            $session->set('multilingual_default_locale', $result[0]);
         }
 
         return ($result === null) ? null : $result[1];
@@ -106,6 +98,8 @@ class Detector
      * Set the locale associated to the 'site' localization context.
      *
      * @param Page $c The page to be used to determine the site locale (if null we'll use the current page)
+     *
+     * @throws \Exception
      */
     public function setupSiteInterfaceLocalization(Page $c = null)
     {
@@ -124,26 +118,18 @@ class Detector
                 $useUserLocale = $dh->inDashboard($c);
             }
             if ($useUserLocale) {
-                $u = new User();
+                $u = $app->make(User::class);
                 $locale = $u->getUserLanguageToDisplay();
             } else {
                 if ($this->isEnabled()) {
                     $ms = Section::getBySectionOfSite($c);
                     if (!$ms) {
-                        $ms = static::getPreferredSection();
+                        $ms = $this->getPreferredSection();
                     }
                     if ($ms) {
-                        $site = $ms->getSite();
-                        $siteConfig = $site->getConfigRepository();
                         $locale = $ms->getLocale();
 
-                        if ($siteConfig->get('multilingual.always_track_user_locale')) {
-                            $storeLocale = true;
-                        } else {
-                            $sessionValidator = $app->make(SessionValidator::class);
-                            $storeLocale = $sessionValidator->hasActiveSession();
-                        }
-                        if ($storeLocale) {
+                        if ($this->canSetSessionValue()) {
                             $app->make('session')->set('multilingual_default_locale', $locale);
                         }
                     }
@@ -166,8 +152,10 @@ class Detector
      * Check if there's some multilingual section.
      *
      * @return bool
+     *
+     * @throws \Exception
      */
-    public static function isEnabled()
+    public function isEnabled()
     {
         $app = Facade::getFacadeApplication();
         $cache = $app->make('cache/request');
@@ -188,5 +176,27 @@ class Detector
         $cache->save($item->set($result));
 
         return $result;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function canSetSessionValue()
+    {
+        $app = Facade::getFacadeApplication();
+        if ($app->make(SessionValidatorInterface::class)->hasActiveSession()) {
+            return true;
+        }
+        $page = Page::getCurrentPage();
+        if ($page !== null) {
+            $site = $page->getSite();
+            if ($site !== null) {
+                $siteConfig = $site->getConfigRepository();
+
+                return (bool) $siteConfig->get('multilingual.always_track_user_locale');
+            }
+        }
+
+        return false;
     }
 }

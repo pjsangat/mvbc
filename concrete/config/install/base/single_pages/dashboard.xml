@@ -102,6 +102,14 @@
                 </attributekey>
             </attributes>
         </page>
+        <page name="Send Message to Group" path="/dashboard/users/groups/message" filename="/dashboard/users/groups/message.php" pagetype=""
+              description="" package="">
+            <attributes>
+                <attributekey handle="meta_keywords">
+                    <value>user, group, people, messages</value>
+                </attributekey>
+            </attributes>
+        </page>
         <page name="Attributes" path="/dashboard/users/attributes" filename="/dashboard/users/attributes.php"
               pagetype="" description="" package="">
             <attributes>
@@ -211,6 +219,14 @@
             <attributes>
                 <attributekey handle="meta_keywords">
                     <value>forms, log, error, email, mysql, exception, survey, history</value>
+                </attributekey>
+            </attributes>
+        </page>
+        <page name="Page Changes" path="/dashboard/reports/page_changes" filename="/dashboard/reports/page_changes.php" pagetype=""
+              description="" package="">
+            <attributes>
+                <attributekey handle="meta_keywords">
+                    <value>changes, csv, report</value>
                 </attributekey>
             </attributes>
         </page>
@@ -564,16 +580,6 @@
 
         <page name="Data Objects" path="/dashboard/system/express/entities" filename="/dashboard/system/express/entities.php" pagetype=""
               description="" package="">
-
-            <attributes>
-                <attributekey handle="exclude_nav">
-                    <value><![CDATA[1]]></value>
-                </attributekey>
-                <attributekey handle="exclude_search_index">
-                    <value>1</value>
-                </attributekey>
-            </attributes>
-
         </page>
 
         <page name="Attributes" path="/dashboard/system/express/entities/attributes"
@@ -624,7 +630,7 @@
             </attributes>
         </page>
 
-        <page name="Customize Search" path="/dashboard/system/express/entities/order_entries"
+        <page name="Update Entry Display Order" path="/dashboard/system/express/entities/order_entries"
               filename="/dashboard/system/express/entities/order_entries.php" pagetype="" description="" package="">
             <attributes>
                 <attributekey handle="exclude_nav">
@@ -640,6 +646,10 @@
               filename="/dashboard/system/express/entries.php" pagetype="" description="" package="">
         </page>
 
+        <page name="Multiple Site Hosting" path="/dashboard/system/multisite" filename="/dashboard/system/sites/view.php" pagetype="" user="admin" description="" package=""/>
+        <page name="Sites &amp; Domains" path="/dashboard/system/multisite/sites" filename="/dashboard/system/multisite/sites/view.php" pagetype="" user="admin" description="" package=""/>
+        <page name="Site Types" path="/dashboard/system/multisite/types" filename="/dashboard/system/multisite/types/view.php" pagetype="" user="admin" description="" package=""/>
+        <page name="Multisite Settings" path="/dashboard/system/multisite/settings" filename="/dashboard/system/multisite/types/view.php" pagetype="" user="admin" description="" package=""/>
 
         <page name="Multilingual" path="/dashboard/system/multilingual" filename="/dashboard/system/multilingual/view.php" pagetype="" description="Run your site in multiple languages." package="">
             <attributes>
@@ -773,6 +783,13 @@
                 </attributekey>
             </attributes>
         </page>
+        <page name="Export Options" path="/dashboard/system/files/export_options" filename="/dashboard/system/files/export_options.php" pagetype="" description="" package="">
+            <attributes>
+                <attributekey handle="meta_keywords">
+                    <value>files, export, csv, bom, encoding</value>
+                </attributekey>
+            </attributes>
+        </page>
         <page name="Optimization" path="/dashboard/system/optimization"
               filename="/dashboard/system/optimization/view.php" pagetype="" description="Keep your site running well."
               package=""/>
@@ -797,14 +814,6 @@
             <attributes>
                 <attributekey handle="meta_keywords">
                     <value>index search, reindex search, build sitemap, sitemap.xml, clear old versions, page versions, remove old</value>
-                </attributekey>
-            </attributes>
-        </page>
-        <page name="Database Query Log" path="/dashboard/system/optimization/query_log"
-              filename="/dashboard/system/optimization/query_log.php" pagetype="" description="" package="">
-            <attributes>
-                <attributekey handle="meta_keywords">
-                    <value>queries, database, mysql</value>
                 </attributekey>
             </attributes>
         </page>
@@ -845,11 +854,19 @@
                 </attributekey>
             </attributes>
         </page>
+        <page name="Configure IP Blocking" path="/dashboard/system/permissions/blacklist/configure"
+              filename="/dashboard/system/permissions/blacklist/configure.php" pagetype="" description="" package="">
+            <attributes>
+                <attributekey handle="exclude_nav">
+                    <value>1</value>
+                </attributekey>
+            </attributes>
+        </page>
         <page name="IP Range" path="/dashboard/system/permissions/blacklist/range"
               filename="/dashboard/system/permissions/blacklist/range.php" pagetype="" description="" package="">
             <attributes>
 				<attributekey handle="exclude_nav">
-                    <value>0</value>
+                    <value>1</value>
                 </attributekey>
             </attributes>
         </page>
@@ -877,11 +894,19 @@
                 </attributekey>
             </attributes>
         </page>
+        <page name="Trusted Proxies" path="/dashboard/system/permissions/trusted_proxies"
+              filename="/dashboard/system/permissions/trusted_proxies.php" pagetype="" description="" package="">
+            <attributes>
+                <attributekey handle="meta_keywords">
+                    <value>trusted, proxy, proxies, ip, header, cloudflare</value>
+                </attributekey>
+            </attributes>
+        </page>
 
         <page name="Login &amp; Registration" path="/dashboard/system/registration"
               filename="/dashboard/system/registration/view.php" pagetype=""
               description="Change login behaviors and setup public profiles." package=""/>
-        <page name="Public Registration" path="/dashboard/system/registration/open"
+        <page name="Account Options" path="/dashboard/system/registration/open"
               filename="/dashboard/system/registration/open.php" pagetype="" description="" package="">
             <attributes>
                 <attributekey handle="meta_keywords">
@@ -927,6 +952,20 @@
 
         <page name="User Deactivation Settings" path="/dashboard/system/registration/deactivation"
               filename="/dashboard/system/registration/deactivation.php" pagetype="" description="" package="">
+        </page>
+        <page name="Automated Logout" path="/dashboard/system/registration/automated_logout" filename="/dashboard/system/registration/automated_logout.php" pagetype="" description="Automate when users are logged out, or do it manually" package="">
+            <attributes>
+                <attributekey handle="meta_keywords">
+                    <value>login, logout, user, agent, ip, change, security, session, invalidation, invalid</value>
+                </attributekey>
+            </attributes>
+        </page>
+        <page name="Password Requirements" path="/dashboard/system/registration/password_requirements" filename="/dashboard/system/registration/password_requirements.php" pagetype="" description="Set password rule and regulations." package="">
+            <attributes>
+                <attributekey handle="meta_keywords">
+                    <value>password, requirements, code, key, login, registration, security, nist</value>
+                </attributekey>
+            </attributes>
         </page>
 
         <page name="Email" path="/dashboard/system/mail" filename="/dashboard/system/mail/view.php" pagetype=""
@@ -1108,6 +1147,13 @@
                 </attributekey>
             </attributes>
         </page>
+        <page name="Database Character Set" path="/dashboard/system/environment/database_charset" filename="/dashboard/system/environment/database_charset.php" pagetype="" description="" package="">
+            <attributes>
+                <attributekey handle="meta_keywords">
+                    <value>database, character set, charset, collation, utf8</value>
+                </attributekey>
+            </attributes>
+        </page>
         <page name="Geolocation" path="/dashboard/system/environment/geolocation" filename="/dashboard/system/environment/geolocation.php" pagetype="" description="" package="">
             <attributes>
                 <attributekey handle="meta_keywords">
@@ -1126,6 +1172,32 @@
                 </attributekey>
             </attributes>
         </page>
+
+        <page name="API" path="/dashboard/system/api" filename="/dashboard/system/api/view.php"
+              pagetype="" description="" package="">
+        </page>
+        <page name="API Settings" path="/dashboard/system/api/settings"
+              filename="/dashboard/system/api/settings.php" pagetype="" description="" package="">
+            <attributes>
+                <attributekey handle="meta_keywords">
+                    <value>API, programming, public, app</value>
+                </attributekey>
+            </attributes>
+        </page>
+
+        <page name="API Integrations" path="/dashboard/system/api/integrations" filename="/dashboard/system/api/integrations.php" pagetype=""
+              description="" package="">
+            <attributes>
+                <attributekey handle="exclude_nav">
+                    <value><![CDATA[1]]></value>
+                </attributekey>
+                <attributekey handle="exclude_search_index">
+                    <value><![CDATA[1]]></value>
+                </attributekey>
+            </attributes>
+        </page>
+
+
         <page name="Welcome" path="/dashboard/welcome" filename="/dashboard/welcome.php" description="" package="">
             <attributes>
                 <attributekey handle="desktop_priority">

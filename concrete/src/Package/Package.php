@@ -290,7 +290,18 @@ abstract class Package implements LocalizablePackageInterface
     public function installContentFile($file)
     {
         $ci = new ContentImporter();
-        $ci->importContentFile($this->getPackagePath() . '/' . $file);
+        $cache = $this->app->make('cache/request');
+        $cacheEnabled = $cache->isEnabled();
+        if ($cacheEnabled) {
+            $cache->disable();
+        }
+        try {
+            $ci->importContentFile($this->getPackagePath() . '/' . $file);
+        } finally {
+            if ($cacheEnabled) {
+                $cache->enable();
+            }
+        }
     }
 
     /**
@@ -603,14 +614,16 @@ abstract class Package implements LocalizablePackageInterface
      */
     public function getChangelogContents()
     {
-        $result = '';
-        $file = $this->getPackagePath() . '/CHANGELOG';
-        if (is_file($file)) {
-            $contents = $this->app->make('helper/file')->getContents($file);
-            $result = nl2br(h($contents));
+        $prefix = $this->getPackagePath() . '/';
+        foreach (['CHANGELOG', 'CHANGELOG.txt', 'CHANGELOG.md'] as $name) {
+            $file = $prefix . $name;
+            if (is_file($file)) {
+                $contents = $this->app->make('helper/file')->getContents($file);
+                return nl2br(h($contents));
+            }
         }
 
-        return $result;
+        return '';
     }
 
     /**

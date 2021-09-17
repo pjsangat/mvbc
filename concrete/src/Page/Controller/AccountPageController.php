@@ -7,8 +7,9 @@ use Concrete\Core\Attribute\Context\DashboardFormContext;
 use Concrete\Core\Attribute\Context\FrontendFormContext;
 use Concrete\Core\Attribute\Form\Renderer;
 use Concrete\Core\Page\Desktop\DesktopList;
+use Concrete\Core\User\User;
 use Loader;
-use PageController as CorePageController;
+use Concrete\Core\Page\Controller\PageController as CorePageController;
 
 class AccountPageController extends CorePageController
 {
@@ -16,7 +17,7 @@ class AccountPageController extends CorePageController
 
     public function on_start()
     {
-        $u = new \User();
+        $u = $this->app->make(User::class);
         if (!$u->isRegistered()) {
             return $this->replace('/login');
         }
@@ -25,13 +26,14 @@ class AccountPageController extends CorePageController
         $dh = \Core::make('helper/concrete/dashboard');
         $desktop = DesktopList::getMyDesktop();
         if ($dh->inDashboard($desktop) && $this->getPageObject()->getCollectionPath() != '/account/welcome') {
-            $this->theme = 'dashboard';
+            $this->setTheme('dashboard');
             $this->set('pageTitle', t('My Account'));
             $this->set('profileFormRenderer', new Renderer(
                 new DashboardFormContext(),
                 $profile
             ));
         } else {
+            $this->setTheme('concrete');
             $this->set('profileFormRenderer', new Renderer(
                 new FrontendFormContext(),
                 $profile

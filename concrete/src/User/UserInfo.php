@@ -1,21 +1,31 @@
 <?php
-
 namespace Concrete\Core\User;
 
+use Concrete\Core\Antispam\Service;
 use Concrete\Core\Application\Application;
 use Concrete\Core\Attribute\Category\UserCategory;
 use Concrete\Core\Attribute\Key\UserKey;
 use Concrete\Core\Attribute\ObjectInterface as AttributeObjectInterface;
 use Concrete\Core\Attribute\ObjectTrait;
 use Concrete\Core\Database\Connection\Connection;
+use Concrete\Core\Encryption\PasswordHasher;
 use Concrete\Core\Entity\Attribute\Value\UserValue;
-use Concrete\Core\Entity\Attribute\Value\Value\Value;
+use Concrete\Core\Entity\Express\Entry;
 use Concrete\Core\Entity\User\User as UserEntity;
+use Concrete\Core\Entity\User\UserSignup;
+use Concrete\Core\Error\ErrorList\ErrorList;
 use Concrete\Core\Export\ExportableInterface;
+use Concrete\Core\Export\Item\User as UserExporter;
+use Concrete\Core\File\Image\BitmapFormat;
+use Concrete\Core\File\Set\Set;
 use Concrete\Core\File\StorageLocation\StorageLocationFactory;
 use Concrete\Core\Foundation\ConcreteObject;
+use Concrete\Core\Logging\Channels;
+use Concrete\Core\Logging\LoggerFactory;
 use Concrete\Core\Mail\Importer\MailImporter;
 use Concrete\Core\Permission\ObjectInterface as PermissionObjectInterface;
+use Concrete\Core\Support\Facade\Facade;
+use Concrete\Core\User\Avatar\AvatarInterface;
 use Concrete\Core\User\Avatar\AvatarServiceInterface;
 use Concrete\Core\User\Event\DeleteUser as DeleteUserEvent;
 use Concrete\Core\User\Event\UserGroup as UserGroupEvent;
@@ -25,6 +35,7 @@ use Concrete\Core\User\Event\UserInfoWithPassword as UserInfoWithPasswordEvent;
 use Concrete\Core\User\PrivateMessage\Limit;
 use Concrete\Core\User\PrivateMessage\Mailbox as UserPrivateMessageMailbox;
 use Concrete\Core\User\PrivateMessage\PrivateMessage;
+use Concrete\Core\User\User as ConcreteUser;
 use Concrete\Core\Utility\IPAddress;
 use Concrete\Core\Utility\Service\Identifier;
 use Concrete\Core\Workflow\Request\ActivateUserRequest as ActivateUserWorkflowRequest;
@@ -34,11 +45,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Group;
 use Imagine\Image\ImageInterface;
 use League\Flysystem\AdapterInterface;
+use League\URL\URLInterface;
 use stdClass;
-use User as ConcreteUser;
-use View;
-use Concrete\Core\Export\Item\User as UserExporter;
-use Concrete\Core\File\Image\BitmapFormat;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class UserInfo extends ConcreteObject implements AttributeObjectInterface, PermissionObjectInterface, ExportableInterface
 {
@@ -65,7 +74,7 @@ class UserInfo extends ConcreteObject implements AttributeObjectInterface, Permi
     protected $entityManager;
 
     /**
-     * @var \Concrete\Core\Database\Connection\Connection
+     * @var Connection
      */
     protected $connection;
 
@@ -75,7 +84,7 @@ class UserInfo extends ConcreteObject implements AttributeObjectInterface, Permi
     protected $entity;
 
     /**
-     * @var \Symfony\Component\EventDispatcher\EventDispatcher|null
+     * @var EventDispatcher|null
      */
     protected $director = null;
 
@@ -212,6 +221,7 @@ class UserInfo extends ConcreteObject implements AttributeObjectInterface, Permi
         if (!$ue->proceed()) {
             return false;
         }
+
         // Dispatch an on_user_deleted event: subscribers can't cancel this event.
         // This event could be at the end of this method, but let's keep it here so that subscribers
         // can get all the details of the user being deleted.
@@ -240,19 +250,44 @@ class UserInfo extends ConcreteObject implements AttributeObjectInterface, Permi
         // Public file sets should be detached from the user
         $this->connection->executeQuery('UPDATE FileSets SET uID = 0 WHERE uID = ? AND fsType = ?', [
             (int) $this->getUserID(),
-            \Concrete\Core\File\Set\Set::TYPE_PUBLIC,
+            Set::TYPE_PUBLIC,
         ]);
 
         // Delete private file sets from this user
-        foreach (\Concrete\Core\File\Set\Set::getOwnedSets($this) as $set) {
+        foreach (Set::getOwnedSets($this) as $set) {
             $set->delete();
         }
-
-
 
         $this->connection->executeQuery('UPDATE Blocks set uID = ? WHERE uID = ?', [(int) USER_SUPER_ID, (int) $this->getUserID()]);
         $this->connection->executeQuery('UPDATE Pages set uID = ? WHERE uID = ?', [(int) USER_SUPER_ID, (int) $this->getUserID()]);
         $this->connection->executeQuery('UPDATE DownloadStatistics set uID = 0 WHERE uID = ?', [(int) $this->getUserID()]);
+
+        // We need to clear out the doctrine proxies for userSignups or we will get a Doctrine Error
+        /** @var UserSignup[] $userSignups */
+        $userSignups = $this->entityManager->getRepository(UserSignup::class)->findBy(['createdBy' => (int) $this->getUserID()]);
+        $superAdminEntity = $this->entityManager->getRepository(UserEntity::class)->find((int) USER_SUPER_ID);
+
+        foreach ($userSignups as $userSignup) {
+            // If there is no SuperAdmin Just remove the relatedUserSignups
+            if (is_object($superAdminEntity)) {
+                $userSignup->setCreatedBy($superAdminEntity);
+                $this->entityManager->persist($userSignup);
+            } else {
+                $this->entityManager->remove($userSignup);
+            }
+        }
+
+        $expressEntities = $this->entityManager->getRepository(Entry::class)->findBy(['author' => (int) $this->getUserID()]);
+        /** @var Entry $expressEntity */
+        foreach ($expressEntities as $expressEntity) {
+            // If there is no SuperAdmin Just remove the Express Entry
+            if (is_object($superAdminEntity)) {
+                $expressEntity->setAuthor($superAdminEntity);
+                $this->entityManager->persist($expressEntity);
+            } else {
+                $this->entityManager->remove($expressEntity);
+            }
+        }
 
         $this->entityManager->remove($this->entity);
         $this->entityManager->flush();
@@ -261,7 +296,7 @@ class UserInfo extends ConcreteObject implements AttributeObjectInterface, Permi
     }
 
     /**
-     * @param \Concrete\Core\User\PrivateMessage\PrivateMessage $msg
+     * @param PrivateMessage $msg
      *
      * @return bool
      */
@@ -307,9 +342,6 @@ class UserInfo extends ConcreteObject implements AttributeObjectInterface, Permi
     public function markAsPasswordReset()
     {
         $this->connection->executeQuery('UPDATE Users SET uIsPasswordReset = 1 WHERE uID = ? limit 1', [$this->getUserID()]);
-
-        $updateEventData = new UserInfoEvent($this);
-        $this->getDirector()->dispatch('on_user_update', $updateEventData);
     }
 
     /**
@@ -318,9 +350,9 @@ class UserInfo extends ConcreteObject implements AttributeObjectInterface, Permi
      * @param UserInfo $recipient
      * @param string $subject
      * @param string $text
-     * @param \Concrete\Core\User\PrivateMessage\PrivateMessage $inReplyTo
+     * @param PrivateMessage $inReplyTo
      *
-     * @return \Concrete\Core\Error\ErrorList\ErrorList|false|null Returns:
+     * @return ErrorList|false|null Returns:
      * - an error if the send limit has been reached
      * - false if the message is detected as spam
      * - null if no errors occurred
@@ -331,7 +363,7 @@ class UserInfo extends ConcreteObject implements AttributeObjectInterface, Permi
             return Limit::getErrorObject();
         }
         $antispam = $this->application->make('helper/validation/antispam');
-        /* @var \Concrete\Core\Antispam\Service $antispam */
+        /* @var Service $antispam */
         $messageText = t('Subject: %s', $subject);
         $messageText .= "\n";
         $messageText .= t('Message: %s', $text);
@@ -419,12 +451,12 @@ class UserInfo extends ConcreteObject implements AttributeObjectInterface, Permi
     /**
      * Gets the User object of the current UserInfo object ($this).
      *
-     * @return ConcreteUser
+     * @return \Concrete\Core\User\User
      */
     public function getUserObject()
     {
         // returns a full user object - groups and everything - for this userinfo object
-        $nu = ConcreteUser::getByUserID($this->getUserID());
+        $nu = User::getByUserID($this->getUserID());
 
         return $nu;
     }
@@ -470,7 +502,7 @@ class UserInfo extends ConcreteObject implements AttributeObjectInterface, Permi
                 if (isset($data['uPasswordConfirm']) && $data['uPassword'] === $data['uPasswordConfirm']) {
                     $passwordChangedOn = $this->application->make('date')->getOverridableNow();
                     $fields[] = 'uPassword = ?';
-                    $values[] = $this->getUserObject()->getUserPasswordHasher()->HashPassword($data['uPassword']);
+                    $values[] = $this->application->make(PasswordHasher::class)->hashPassword($data['uPassword']);
                     $fields[] = 'uLastPasswordChange = ?';
                     $values[] = $passwordChangedOn;
                     if (isset($data['uIsPasswordReset'])) {
@@ -565,6 +597,8 @@ class UserInfo extends ConcreteObject implements AttributeObjectInterface, Permi
                     [$this->getUserID()]
                 );
                 $userObject = $this->getUserObject();
+                $app = Facade::getFacadeApplication();
+                $logger = $this->application->make(LoggerFactory::class)->createLogger(Channels::CHANNEL_USERS);
                 foreach ($groupObjects as $group) {
                     $ue = new UserGroupEvent($userObject);
                     $ue->setGroupObject($group);
@@ -623,15 +657,15 @@ class UserInfo extends ConcreteObject implements AttributeObjectInterface, Permi
     }
 
     /**
-     * @param null|string $action
-     * @param null|int $requesterUID Use null for the current user
+     * @param string|null $action
+     * @param int|null $requesterUID Use null for the current user
      *
      * @return bool
      */
     public function triggerActivate($action = null, $requesterUID = null)
     {
         if ($requesterUID === null) {
-            $u = new User();
+            $u = $this->application->make(User::class);
             $requesterUID = $u->getUserID();
         }
 
@@ -667,14 +701,14 @@ class UserInfo extends ConcreteObject implements AttributeObjectInterface, Permi
     }
 
     /**
-     * @param null|int $requesterUID Use null for the current user
+     * @param int|null $requesterUID Use null for the current user
      *
      * @return bool
      */
     public function triggerDeactivate($requesterUID = null)
     {
         if ($requesterUID === null) {
-            $u = new User();
+            $u = $this->application->make(User::class);
             $requesterUID = $u->getUserID();
         }
 
@@ -717,12 +751,15 @@ class UserInfo extends ConcreteObject implements AttributeObjectInterface, Permi
             $newPassword = $id->getString($length);
             $this->changePassword($newPassword);
 
+            $ue = new UserInfoEvent($this);
+            $this->getDirector()->dispatch('on_user_reset_password', $ue);
+
             return $newPassword;
         }
     }
 
     /**
-     * @return \Concrete\Core\User\Avatar\AvatarInterface
+     * @return AvatarInterface
      */
     public function getUserAvatar()
     {
@@ -730,7 +767,7 @@ class UserInfo extends ConcreteObject implements AttributeObjectInterface, Permi
     }
 
     /**
-     * @return null|\League\URL\URLInterface
+     * @return URLInterface|null
      */
     public function getUserPublicProfileUrl()
     {
@@ -978,7 +1015,7 @@ class UserInfo extends ConcreteObject implements AttributeObjectInterface, Permi
     }
 
     /**
-     * @return \Symfony\Component\EventDispatcher\EventDispatcher
+     * @return EventDispatcher
      */
     protected function getDirector()
     {

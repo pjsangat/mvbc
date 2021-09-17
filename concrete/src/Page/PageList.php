@@ -1,25 +1,22 @@
 <?php
+
 namespace Concrete\Core\Page;
 
 use Concrete\Core\Entity\Block\BlockType\BlockType;
+use Concrete\Core\Entity\Package;
+use Concrete\Core\Entity\Page\Template as TemplateEntity;
 use Concrete\Core\Entity\Site\Site;
 use Concrete\Core\Entity\Site\Tree;
 use Concrete\Core\Search\ItemList\Database\AttributedItemList as DatabaseItemList;
 use Concrete\Core\Search\ItemList\Pager\Manager\PageListPagerManager;
 use Concrete\Core\Search\ItemList\Pager\PagerProviderInterface;
 use Concrete\Core\Search\ItemList\Pager\QueryString\VariableFactory;
-use Concrete\Core\Search\Pagination\PagerPagination;
-use Concrete\Core\Search\Pagination\Pagination;
 use Concrete\Core\Search\Pagination\PaginationProviderInterface;
-use Concrete\Core\Search\Pagination\PermissionablePagination;
-use Concrete\Core\Search\PermissionableListItemInterface;
-use Concrete\Core\Entity\Package;
 use Concrete\Core\Search\StickyRequest;
-use Doctrine\DBAL\Query\QueryBuilder;
-use Page as ConcretePage;
-use Concrete\Core\Entity\Page\Template as TemplateEntity;
-use Pagerfanta\Adapter\DoctrineDbalAdapter;
 use Concrete\Core\Site\Tree\TreeInterface;
+use Concrete\Core\Support\Facade\Application;
+use Concrete\Core\User\User;
+use Pagerfanta\Adapter\DoctrineDbalAdapter;
 
 /**
  * An object that allows a filtered list of pages to be returned.
@@ -29,43 +26,12 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
     const PAGE_VERSION_ACTIVE = 1;
     const PAGE_VERSION_RECENT = 2;
     const PAGE_VERSION_RECENT_UNAPPROVED = 3;
+    const PAGE_VERSION_SCHEDULED = 4;
 
     const SITE_TREE_CURRENT = -1;
     const SITE_TREE_ALL = 0;
 
-    public function getPagerManager()
-    {
-        return new PageListPagerManager($this);
-    }
-
-    public function __construct(StickyRequest $req = null)
-    {
-        $u = new \User();
-        if ($u->isSuperUser()) {
-            $this->ignorePermissions();
-        }
-        parent::__construct($req);
-    }
-
-    /**
-     * @return \Closure|int|null
-     */
-    public function getPermissionsChecker()
-    {
-        return $this->permissionsChecker;
-    }
-
-    public function getPagerVariableFactory()
-    {
-        return new VariableFactory($this, $this->getSearchRequest());
-    }
-
-    protected function getAttributeKeyClassName()
-    {
-        return '\\Concrete\\Core\\Attribute\\Key\\CollectionKey';
-    }
-
-    /** @var  \Closure | integer | null */
+    /** @var \Closure | integer | null */
     protected $permissionsChecker;
 
     /** @var Tree */
@@ -93,7 +59,7 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
     /**
      * Whether to include system pages in this query. NOTE: There really isn't
      * a reason to set this to true unless you're doing something pretty custom
-     * or deep in the core
+     * or deep in the core.
      *
      * @var bool
      */
@@ -111,6 +77,33 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
      */
     protected $includeInactivePages = false;
 
+    public function __construct(StickyRequest $req = null)
+    {
+        $u = Application::getFacadeApplication()->make(User::class);
+        if ($u->isSuperUser()) {
+            $this->ignorePermissions();
+        }
+        parent::__construct($req);
+    }
+
+    public function getPagerManager()
+    {
+        return new PageListPagerManager($this);
+    }
+
+    /**
+     * @return \Closure|int|null
+     */
+    public function getPermissionsChecker()
+    {
+        return $this->permissionsChecker;
+    }
+
+    public function getPagerVariableFactory()
+    {
+        return new VariableFactory($this, $this->getSearchRequest());
+    }
+
     public function setSiteTreeObject(TreeInterface $tree)
     {
         $this->siteTree = $tree;
@@ -126,9 +119,8 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
         $this->siteTree = self::SITE_TREE_CURRENT;
     }
 
-
     /**
-     * @param boolean $includeSystemPages
+     * @param bool $includeSystemPages
      */
     public function includeSystemPages()
     {
@@ -177,14 +169,15 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
 
     public function filterBySite(Site $site)
     {
-        $this->siteTree = array();
-        foreach($site->getLocales() as $locale) {
+        $this->siteTree = [];
+        foreach ($site->getLocales() as $locale) {
             $this->siteTree[] = $locale->getSiteTree();
         }
     }
 
     public function finalizeQuery(\Doctrine\DBAL\Query\QueryBuilder $query)
     {
+        $expr = $query->expr();
         if ($this->includeAliases) {
             $query->from('Pages', 'p')
                 ->leftJoin('p', 'Pages', 'pa', 'p.cPointerID = pa.cID')
@@ -214,13 +207,28 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
             case self::PAGE_VERSION_RECENT_UNAPPROVED:
                 $query
                     ->andWhere('cv.cvID = (select max(cvID) from CollectionVersions where cID = cv.cID)')
-                    ->andWhere('cvIsApproved = 0');
+                    ->andWhere($expr->eq('cvIsApproved', 0));
+                break;
+            case self::PAGE_VERSION_SCHEDULED:
+                $now = new \DateTime();
+                $query->andWhere('cv.cvID = (select cvID from CollectionVersions where cID = cv.cID and cvIsApproved = 1 and ((cvPublishDate > :cvPublishDate) and (cvPublishEndDate >= :cvPublishDate or cvPublishEndDate is null)) order by cvPublishDate desc limit 1)');
+                $query->setParameter('cvPublishDate', $now->format('Y-m-d H:i:s'));
                 break;
             case self::PAGE_VERSION_ACTIVE:
             default:
-                $now = new \DateTime();
-                $query->andWhere('cv.cvID = (select cvID from CollectionVersions where cID = cv.cID and cvIsApproved = 1 and ((cvPublishDate <= :cvPublishDate or cvPublishDate is null) and (cvPublishEndDate >= :cvPublishDate or cvPublishEndDate is null)) order by cvPublishDate desc limit 1)');
-                $query->setParameter('cvPublishDate', $now->format('Y-m-d H:i:s'));
+                $app = Application::getFacadeApplication();
+                $nowParameter = $query->createNamedParameter($app->make('date')->getOverridableNow());
+                $query
+                    ->andWhere($expr->eq('cv.cvIsApproved', 1))
+                    ->andWhere($expr->orX(
+                        $expr->isNull('cv.cvPublishDate'),
+                        $expr->lte('cv.cvPublishDate', $nowParameter)
+                    ))
+                    ->andWhere($expr->orX(
+                        $expr->isNull('cv.cvPublishEndDate'),
+                        $expr->gte('cv.cvPublishEndDate', $nowParameter)
+                    ))
+                ;
                 break;
         }
 
@@ -230,14 +238,13 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
         }
 
         if ($this->query->getParameter('cParentID') < 1) {
-
             // The code above is set up to make it so that we don't filter by site tree
             // if we have a defined parent.
 
             if (is_object($this->siteTree) || is_array($this->siteTree)) {
                 $tree = $this->siteTree;
             } else {
-                switch($this->siteTree) {
+                switch ($this->siteTree) {
                     case self::SITE_TREE_CURRENT:
                         $c = \Page::getCurrentPage();
                         $tree = false;
@@ -245,47 +252,49 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
                             $tree = $c->getSiteTreeObject();
                         }
                         if (!is_object($tree)) {
-                            $site = \Core::make("site")->getSite();
+                            $site = \Core::make('site')->getSite();
                             $tree = $site->getSiteTreeObject();
                         }
+                        break;
+                    default:
+                        $tree = null;
                         break;
                 }
             }
 
-            if (isset($tree)) {
-                if (is_array($tree)) {
-                    $treeIDs = array();
-                    foreach($tree as $siteTree) {
+            if ($tree !== null) {
+                if (!is_array($tree)) {
+                    $tree = [$tree];
+                }
+                $treeIDs = [];
+                foreach ($tree as $siteTree) {
+                    if ($siteTree instanceof Site) {
+                        foreach ($siteTree->getLocales() as $locale) {
+                            $treeIDs[] = $locale->getSiteTreeID();
+                        }
+                    } else {
                         $treeIDs[] = $siteTree->getSiteTreeID();
                     }
-                    if ($this->includeSystemPages) {
-                        $query->andWhere(
-                            $query->expr()->orX()->add(
-                                $query->expr()->in('p.siteTreeID', array_map([$query->getConnection(), 'quote'], $treeIDs))
-                            )->add('p.siteTreeID = 0')
-                        );
-                    } else {
-                        $query->andWhere(
-                            $query->expr()->in('p.siteTreeID', array_map([$query->getConnection(), 'quote'], $treeIDs))
-                        );
+                }
+                if (count($treeIDs) === 0) {
+                    if (!$this->includeSystemPages) {
+                        $query->andWhere($query->expr()->neq('p.siteTreeID', 0));
                     }
-
                 } else {
-                    // We have either passed in a specific tree or we are looking at the current site.
-                    $query->setParameter('siteTreeID', $tree->getSiteTreeID());
-                    if ($this->includeSystemPages) {
-                        $query->andWhere('(p.siteTreeID = :siteTreeID or p.siteTreeID = 0)');
-                    } else {
-                        $query->andWhere('p.siteTreeID = :siteTreeID');
+                    $or = $query->expr()->orX();
+                    foreach ($treeIDs as $treeID) {
+                        $or->add($query->expr()->eq('p.siteTreeID', $treeID));
                     }
+                    if ($this->includeSystemPages) {
+                        $or->add($query->expr()->eq('p.siteTreeID', 0));
+                    }
+                    $query->andWhere($or);
                 }
             }
-
         }
 
         if (!$this->includeSystemPages) {
-            $query->andWhere('p.cIsSystemPage = :cIsSystemPage');
-            $query->setParameter('cIsSystemPage', false);
+            $query->andWhere($query->expr()->eq('p.cIsSystemPage', 0));
         }
 
         return $query;
@@ -293,16 +302,15 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
 
     public function getTotalResults()
     {
-        $u = new \User();
         if ($this->permissionsChecker === -1) {
             $query = $this->deliverQueryObject();
             // We need to reset the potential custom order by here because otherwise, if we've added
             // items to the select parts, and we're ordering by them, we get a SQL error
             // when we get total results, because we're resetting the select
             return $query->resetQueryParts(['groupBy', 'orderBy'])->select('count(distinct p.cID)')->setMaxResults(1)->execute()->fetchColumn();
-        } else {
-            return -1; // unknown
         }
+
+        return -1; // unknown
     }
 
     public function getPaginationAdapter()
@@ -313,6 +321,7 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
             // when we get total results, because we're resetting the select
             $query->resetQueryParts(['groupBy', 'orderBy'])->select('count(distinct p.cID)')->setMaxResults(1);
         });
+
         return $adapter;
     }
 
@@ -323,12 +332,22 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
      */
     public function getResult($queryRow)
     {
-        $c = ConcretePage::getByID($queryRow['cID'], 'ACTIVE');
+        $c = Page::getByID($queryRow['cID'], 'ACTIVE');
         if (is_object($c) && $this->checkPermissions($c)) {
             if ($this->pageVersionToRetrieve == self::PAGE_VERSION_RECENT) {
                 $cp = new \Permissions($c);
                 if ($cp->canViewPageVersions() || $this->permissionsChecker === -1) {
                     $c->loadVersionObject('RECENT');
+                }
+            } elseif ($this->pageVersionToRetrieve == self::PAGE_VERSION_SCHEDULED) {
+                $cp = new \Permissions($c);
+                if ($cp->canViewPageVersions() || $this->permissionsChecker === -1) {
+                    $c->loadVersionObject('SCHEDULED');
+                }
+            } elseif ($this->pageVersionToRetrieve == self::PAGE_VERSION_RECENT_UNAPPROVED) {
+                $cp = new \Permissions($c);
+                if ($cp->canViewPageVersions() || $this->permissionsChecker === -1) {
+                    $c->loadVersionObject('RECENT_UNAPPROVED');
                 }
             }
             if (isset($queryRow['cIndexScore'])) {
@@ -344,9 +363,9 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
         if (isset($this->permissionsChecker)) {
             if ($this->permissionsChecker === -1) {
                 return true;
-            } else {
-                return call_user_func_array($this->permissionsChecker, [$mixed]);
             }
+
+            return call_user_func_array($this->permissionsChecker, [$mixed]);
         }
 
         $cp = new \Permissions($mixed);
@@ -376,6 +395,7 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
      * Filters by page template.
      *
      * @param mixed $ptHandle
+     * @param TemplateEntity $template
      */
     public function filterByPageTemplate(TemplateEntity $template)
     {
@@ -387,6 +407,7 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
      * Filters by date added.
      *
      * @param string $date
+     * @param mixed $comparison
      */
     public function filterByDateAdded($date, $comparison = '=')
     {
@@ -401,7 +422,7 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
      */
     public function filterByNumberOfChildren($number, $comparison = '>')
     {
-        $number = intval($number);
+        $number = (int) $number;
         if ($this->includeAliases) {
             $this->query->andWhere(
                 $this->query->expr()->orX(
@@ -430,6 +451,7 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
      * Filters by public date.
      *
      * @param string $date
+     * @param mixed $comparison
      */
     public function filterByPublicDate($date, $comparison = '=')
     {
@@ -438,6 +460,8 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
 
     /**
      * Filters by package.
+     *
+     * @param Package $package
      */
     public function filterByPackage(Package $package)
     {
@@ -450,8 +474,12 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
      */
     public function filterByPagesWithCustomStyles()
     {
-        $this->query->innerJoin('cv', 'CollectionVersionThemeCustomStyles', 'cvStyles',
-            'cv.cID = cvStyles.cID');
+        $this->query->innerJoin(
+            'cv',
+            'CollectionVersionThemeCustomStyles',
+            'cvStyles',
+            'cv.cID = cvStyles.cID'
+        );
     }
 
     /**
@@ -468,7 +496,7 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
     /**
      * Filters by page type ID.
      *
-     * @param array | integer $cParentID
+     * @param array | integer $ptID
      */
     public function filterByPageTypeID($ptID)
     {
@@ -575,6 +603,8 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
 
     /**
      * Filters by topic. Doesn't look at specific attributes –instead, actually joins to the topics table.
+     *
+     * @param mixed $topic
      */
     public function filterByTopic($topic)
     {
@@ -607,11 +637,14 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
         $query->select('distinct p2.cID')
             ->from('Pages', 'p2')
             ->innerJoin('p2', 'CollectionVersions', 'cv2', 'cv2.cID = p2.cID')
-            ->innerJoin('cv2', 'CollectionVersionBlocks', 'cvb2',
-                'cv2.cID = cvb2.cID and cv2.cvID = cvb2.cvID')
+            ->innerJoin(
+                'cv2',
+                'CollectionVersionBlocks',
+                'cvb2',
+                'cv2.cID = cvb2.cID and cv2.cvID = cvb2.cvID'
+            )
             ->innerJoin('cvb2', 'Blocks', 'b', 'cvb2.bID = b.bID')
             ->andWhere('b.btID = :btID');
-
 
         $this->query->andWhere(
             $this->query->expr()->in('p.cID', $query->getSQL())
@@ -701,17 +734,10 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
         }
     }
 
-    protected function selectDistinct()
-    {
-        $selects = $this->query->getQueryPart('select');
-        if ($selects[0] === 'p.cID') {
-            $selects[0] = 'distinct p.cID';
-            $this->query->select($selects);
-        }
-    }
-
     /**
      * @deprecated
+     *
+     * @param mixed $ctHandle
      */
     public function filterByCollectionTypeHandle($ctHandle)
     {
@@ -720,6 +746,8 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
 
     /**
      * @deprecated
+     *
+     * @param mixed $ctID
      */
     public function filterByCollectionTypeID($ctID)
     {
@@ -744,4 +772,17 @@ class PageList extends DatabaseItemList implements PagerProviderInterface, Pagin
         $this->setPageVersionToRetrieve(self::PAGE_VERSION_RECENT);
     }
 
+    protected function getAttributeKeyClassName()
+    {
+        return '\\Concrete\\Core\\Attribute\\Key\\CollectionKey';
+    }
+
+    protected function selectDistinct()
+    {
+        $selects = $this->query->getQueryPart('select');
+        if ($selects[0] === 'p.cID') {
+            $selects[0] = 'distinct p.cID';
+            $this->query->select($selects);
+        }
+    }
 }

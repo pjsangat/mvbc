@@ -7,26 +7,102 @@ namespace Punic;
  */
 class Territory
 {
+    private static $CODE_TYPES = array('alpha3', 'numeric', 'fips10');
+
     /**
-     * Retrieve the name of a territory (country, continent, ...).
+     * Retrieve the name of a territory/subdivision (country, continent, ...).
      *
-     * @param string $territoryCode The territory code
+     * @param string $territoryCode The territory/subdivision code
      * @param string $locale The locale to use. If empty we'll use the default locale set in \Punic\Data
      *
-     * @return string Returns the localized territory name (returns $territoryCode if not found)
+     * @return string Returns the localized territory/subdivision name (returns $territoryCode if not found)
      */
     public static function getName($territoryCode, $locale = '')
     {
         $result = $territoryCode;
-        if (preg_match('/^[a-z0-9]{2,3}$/i', $territoryCode)) {
-            $territoryCode = strtoupper($territoryCode);
-            $data = Data::get('territories', $locale);
+        if (preg_match('/^[a-z0-9]{2,5}$/i', $territoryCode)) {
+            if (strlen($territoryCode) == 2 || (int) $territoryCode > 0) {
+                $territoryCode = strtoupper($territoryCode);
+                $data = Data::get('territories', $locale);
+            } else {
+                $territoryCode = strtolower($territoryCode);
+                $data = Data::get('subdivisions', $locale);
+            }
             if (isset($data[$territoryCode])) {
                 $result = $data[$territoryCode];
             }
         }
 
         return $result;
+    }
+
+    /**
+     * Retrieve the code of a territory in a different coding system.
+     *
+     * @param string $territoryCode The territory code
+     * @param string $type The type of code to return. "alpha3" for ISO 3166-1 alpha-3 codes, "numeric" for UN M.49, or "fips10" for FIPS 10 codes
+     *
+     * @throws \Punic\Exception\ValueNotInList throws a ValueNotInList exception if $type is not valid
+     *
+     * @return string|array returns the code for the specified territory, or an empty string if the code is not defined for the territory or the territory is unknown
+     *
+     * @see http://unicode.org/reports/tr35/tr35-info.html#Supplemental_Code_Mapping
+     */
+    public static function getCode($territoryCode, $type)
+    {
+        $codeMappings = Data::getGeneric('codeMappings');
+        $territories = $codeMappings['territories'];
+
+        if (!in_array($type, static::$CODE_TYPES)) {
+            throw new Exception\ValueNotInList($type, static::$CODE_TYPES);
+        }
+
+        if (!isset($territories[$territoryCode])) {
+            $result = '';
+        } elseif (isset($territories[$territoryCode][$type])) {
+            $result = $territories[$territoryCode][$type];
+        } elseif ($type !== 'numeric' && $type !== 'alpha3') {
+            $result = $territoryCode;
+        } else {
+            $result = '';
+        }
+
+        return $result;
+    }
+
+    /**
+     * Retrieve the territory code given its code in a different coding system.
+     *
+     * @param string $code The code
+     * @param string $type The type of code provided. "alpha3" for ISO 3166-1 alpha-3 codes, "numeric" for UN M.49, or "fips10" for FIPS 10 codes
+     *
+     * @throws \Punic\Exception\ValueNotInList throws a ValueNotInList exception if $type is not valid
+     *
+     * @return string returns the code for the specified territory, or null if the code is unknown
+     *
+     * @see http://unicode.org/reports/tr35/tr35-info.html#Supplemental_Code_Mapping
+     */
+    public static function getByCode($code, $type)
+    {
+        $codeMappings = Data::getGeneric('codeMappings');
+        $territories = $codeMappings['territories'];
+
+        if (!in_array($type, static::$CODE_TYPES)) {
+            throw new Exception\ValueNotInList($type, static::$CODE_TYPES);
+        }
+
+        foreach ($territories as $territoryCode => $territory) {
+            $c = isset($territory[$type]) ? $territory[$type] : $territoryCode;
+            if (is_array($c)) {
+                if (in_array($code, $c)) {
+                    return $territoryCode;
+                }
+            } elseif ($code == $c) {
+                return $territoryCode;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -88,13 +164,14 @@ class Territory
     }
 
     /**
-     * Return a list of some specified territory, structured or not.
+     * Return a list of some specified territory/subdivision, structured or not.
      * $levels control which data you want to retrieve. It can be one or more of the following values:
      * <ul>
      *     <li>'W': world</li>
      *     <li>'C': continents</li>
      *     <li>'S': sub-continents</li>
      *     <li>'c': countries</li>
+     *     <li>'s': subdivisions</li>
      * </ul>
      * If only one level is specified you'll get a flat list (like the one returned by {@link getContinents}).
      * If one or more levels are specified, you'll get a structured list (like the one returned by {@link getContinentsAndCountries}).
@@ -107,10 +184,11 @@ class Territory
      * @return array
      *
      * @see http://www.unicode.org/cldr/charts/latest/supplemental/territory_containment_un_m_49.html
+     * @see http://www.unicode.org/cldr/charts/latest/supplemental/territory_subdivisions.html
      */
     public static function getList($levels = 'W', $locale = '')
     {
-        static $levelMap = array('W' => 0, 'C' => 1, 'S' => 2, 'c' => 3);
+        static $levelMap = array('W' => 0, 'C' => 1, 'S' => 2, 'c' => 3, 's' => 4);
         $decodedLevels = array();
         $n = is_string($levels) ? strlen($levels) : 0;
         if ($n > 0) {
@@ -130,7 +208,11 @@ class Territory
         }
         $struct = self::filterStructure(self::getStructure(), $decodedLevels, 0);
         $flatList = (count($decodedLevels) > 1) ? false : true;
-        $finalized = self::finalizeWithNames(Data::get('territories', $locale), $struct, $flatList);
+        $data = Data::get('territories', $locale);
+        if (strpos($levels, 's') !== false) {
+            $data += Data::get('subdivisions', $locale);
+        }
+        $finalized = self::finalizeWithNames($data, $struct, $flatList);
 
         if ($flatList) {
             $sorter = new \Punic\Comparer();
@@ -288,21 +370,27 @@ class Territory
     }
 
     /**
-     * Return the code of the territory that contains a territory.
+     * Return the code of the territory/subdivision that contains a territory/subdivision.
      *
      * @param string $childTerritoryCode
      *
-     * @return string return the parent territory code, or an empty string if $childTerritoryCode is the World (001) or if it's invalid
+     * @return string return the parent territory/subdivision code, or an empty string if $childTerritoryCode is the World (001) or if it's invalid
      */
     public static function getParentTerritoryCode($childTerritoryCode)
     {
         $result = '';
-        if (is_string($childTerritoryCode) && preg_match('/^[a-z0-9]{2,3}$/i', $childTerritoryCode)) {
-            $childTerritoryCode = strtoupper($childTerritoryCode);
-            foreach (Data::getGeneric('territoryContainment') as $parentTerritoryCode => $parentTerritoryInfo) {
-                if (in_array($childTerritoryCode, $parentTerritoryInfo['contains'], true)) {
+        if (is_string($childTerritoryCode) && preg_match('/^[a-z0-9]{2,5}$/i', $childTerritoryCode)) {
+            if (strlen($childTerritoryCode) == 2 || (int) $childTerritoryCode > 0) {
+                $childTerritoryCode = strtoupper($childTerritoryCode);
+                $data = Data::getGeneric('territoryContainment');
+            } else {
+                $childTerritoryCode = strtolower($childTerritoryCode);
+                $data = Data::getGeneric('subdivisionContainment');
+            }
+            foreach ($data as $parentTerritoryCode => $parentTerritoryInfo) {
+                if (in_array($childTerritoryCode, $parentTerritoryInfo['contains'], false)) {
                     $result = is_int($parentTerritoryCode) ? substr('00'.$parentTerritoryCode, -3) : $parentTerritoryCode;
-                    if (($result === '001') || (strlen(static::getParentTerritoryCode($result)) > 0)) {
+                    if ($result === '001' || static::getParentTerritoryCode($result) !== '') {
                         break;
                     }
                 }
@@ -313,24 +401,33 @@ class Territory
     }
 
     /**
-     * Retrieve the child territories of a parent territory.
+     * Retrieve the child territories/subdivisions of a parent territory.
      *
      * @param string $parentTerritoryCode
      * @param bool $expandSubGroups set to true to expand the sub-groups, false to retrieve them
+     * @param bool $expandSubdivisions set to true to expand countries into subdivisions, false to retrieve them
      *
      * @return array Return the list of territory codes that are children of $parentTerritoryCode (if $parentTerritoryCode is invalid you'll get an empty list)
      */
-    public static function getChildTerritoryCodes($parentTerritoryCode, $expandSubGroups = false)
+    public static function getChildTerritoryCodes($parentTerritoryCode, $expandSubGroups = false, $expandSubdivisions = false)
     {
         $result = array();
-        if (is_string($parentTerritoryCode) && preg_match('/^[a-z0-9]{2,3}$/i', $parentTerritoryCode)) {
-            $parentTerritoryCode = strtoupper($parentTerritoryCode);
+        if (is_string($parentTerritoryCode) && preg_match('/^[a-z0-9]{2,5}$/i', $parentTerritoryCode)) {
+            if (strlen($parentTerritoryCode) == 2 || (int) $parentTerritoryCode > 0) {
+                $parentTerritoryCode = strtoupper($parentTerritoryCode);
+            } else {
+                $parentTerritoryCode = strtolower($parentTerritoryCode);
+                $expandSubdivisions = true;
+            }
             $data = Data::getGeneric('territoryContainment');
+            if ($expandSubdivisions) {
+                $data += Data::getGeneric('subdivisionContainment');
+            }
             if (isset($data[$parentTerritoryCode])) {
                 $children = $data[$parentTerritoryCode]['contains'];
                 if ($expandSubGroups) {
                     foreach ($children as $child) {
-                        $grandChildren = static::getChildTerritoryCodes($child, true);
+                        $grandChildren = static::getChildTerritoryCodes($child, true, $expandSubdivisions);
                         if (empty($grandChildren)) {
                             $result[] = $child;
                         } else {
@@ -372,7 +469,7 @@ class Territory
     {
         static $cache = null;
         if ($cache === null) {
-            $data = Data::getGeneric('territoryContainment');
+            $data = Data::getGeneric('territoryContainment') + Data::getGeneric('subdivisionContainment');
             $result = static::fillStructure($data, '001', 0);
             $cache = $result;
         } else {

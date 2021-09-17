@@ -4,6 +4,7 @@ namespace Concrete\Core\Console\Command;
 
 use Concrete\Core\Cache\Cache;
 use Concrete\Core\Console\Command;
+use Concrete\Core\Encryption\PasswordHasher;
 use Concrete\Core\Install\ConnectionOptionsPreconditionInterface;
 use Concrete\Core\Install\Installer;
 use Concrete\Core\Install\PreconditionResult;
@@ -14,7 +15,6 @@ use Concrete\Core\Support\Facade\Application;
 use Database;
 use DateTimeZone;
 use Exception;
-use Hautelook\Phpass\PasswordHash;
 use InvalidArgumentException;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
@@ -140,13 +140,8 @@ EOT
         $spl = $installer->getStartingPoint(false);
         $installer->getOptions()->save();
         try {
-            Database::extend('install', function () use ($options) {
-                return Database::getFactory()->createConnection([
-                    'host' => $options['db-server'],
-                    'user' => $options['db-username'],
-                    'password' => $options['db-password'],
-                    'database' => $options['db-database'],
-                ]);
+            Database::extend('install', function () use ($installer) {
+                return $installer->createConnection();
             });
             Database::setDefaultConnection('install');
             $config->set('database.connections.install', []);
@@ -220,7 +215,13 @@ EOT
                 }
 
                 $installer = $this->buildInstaller($this->getFinalOptions($input));
-                switch ($this->checkOptionPreconditions($app, $installer, $input, $output)) {
+                try {
+                    $preconditionsResult = $this->checkOptionPreconditions($app, $installer, $input, $output);
+                } catch (Exception $x) {
+                    $output->writeln('<error>' . $x->getMessage() . '</error>');
+                    $preconditionsResult = self::OPTIONPRECONDITIONS_ERROR;
+                }
+                switch ($preconditionsResult) {
                     case self::OPTIONPRECONDITIONS_ERROR:
                         $confirm = new Question('Errors detected! Would you like to change the above settings? [Y]es / [N]o: ', false);
                         $confirm->setValidator(function ($given) {
@@ -280,7 +281,7 @@ EOT
                 $confirm = new Question('Would you like to install with these settings? [Y]es / [N]o / [E]dit: ', false);
                 $confirm->setValidator(function ($given) {
                     if (!$given || !preg_match('/^[yne]/i', $given)) {
-                        throw new InvalidArgumentException('Please answer either Y, N or R.');
+                        throw new InvalidArgumentException('Please answer either Y, N or E.');
                     }
 
                     return $given;
@@ -707,7 +708,7 @@ EOT
     {
         $app = Application::getFacadeApplication();
         $config = $app->make('config');
-        $hasher = new PasswordHash($config->get('concrete.user.password.hash_cost_log2'), $config->get('concrete.user.password.hash_portable'));
+        $hasher = $app->make(PasswordHasher::class);
         $installer = $app->make(Installer::class);
         $installer->getOptions()
             ->setConfiguration([
@@ -720,7 +721,8 @@ EOT
                             'database' => $options['db-database'],
                             'username' => $options['db-username'],
                             'password' => (string) $options['db-password'],
-                            'charset' => 'utf8',
+                            'character_set' => $config->get('database.fallback_character_set'),
+                            'collation' => $config->get('database.fallback_collation'),
                         ],
                     ],
                 ],
@@ -733,7 +735,7 @@ EOT
             ->setStartingPointHandle($options['starting-point'])
             ->setSiteName($options['site'])
             ->setUserEmail($options['admin-email'])
-            ->setUserPasswordHash($hasher->HashPassword($options['admin-password']))
+            ->setUserPasswordHash($hasher->hashPassword($options['admin-password']))
             ->setServerTimeZoneId($options['timezone'])
         ;
 

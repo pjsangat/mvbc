@@ -209,6 +209,17 @@ class UserSignup extends \Concrete\Core\Entity\User\UserSignup implements \Doctr
     /**
      * {@inheritDoc}
      */
+    public function setCreatedBy(\Concrete\Core\Entity\User\User $user)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setCreatedBy', [$user]);
+
+        return parent::setCreatedBy($user);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getUsersToExcludeFromNotification()
     {
 

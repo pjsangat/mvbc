@@ -3,6 +3,8 @@
 namespace IPLib\Range;
 
 use IPLib\Address\AddressInterface;
+use IPLib\Address\IPv4;
+use IPLib\Address\Type as AddressType;
 use IPLib\Factory;
 
 /**
@@ -14,14 +16,14 @@ use IPLib\Factory;
 class Single implements RangeInterface
 {
     /**
-     * @var AddressInterface
+     * @var \IPLib\Address\AddressInterface
      */
     protected $address;
 
     /**
      * Initializes the instance.
      *
-     * @param AddressInterface $address
+     * @param \IPLib\Address\AddressInterface $address
      */
     protected function __construct(AddressInterface $address)
     {
@@ -49,7 +51,7 @@ class Single implements RangeInterface
     /**
      * Create the range instance starting from an address instance.
      *
-     * @param AddressInterface $address
+     * @param \IPLib\Address\AddressInterface $address
      *
      * @return static
      */
@@ -61,7 +63,7 @@ class Single implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::toString()
+     * @see \IPLib\Range\RangeInterface::toString()
      */
     public function toString($long = false)
     {
@@ -71,7 +73,7 @@ class Single implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::__toString()
+     * @see \IPLib\Range\RangeInterface::__toString()
      */
     public function __toString()
     {
@@ -81,7 +83,7 @@ class Single implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getAddressType()
+     * @see \IPLib\Range\RangeInterface::getAddressType()
      */
     public function getAddressType()
     {
@@ -91,7 +93,7 @@ class Single implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getRangeType()
+     * @see \IPLib\Range\RangeInterface::getRangeType()
      */
     public function getRangeType()
     {
@@ -101,7 +103,7 @@ class Single implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::contains()
+     * @see \IPLib\Range\RangeInterface::contains()
      */
     public function contains(AddressInterface $address)
     {
@@ -118,7 +120,7 @@ class Single implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::containsRange()
+     * @see \IPLib\Range\RangeInterface::containsRange()
      */
     public function containsRange(RangeInterface $range)
     {
@@ -135,7 +137,7 @@ class Single implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getStartAddress()
+     * @see \IPLib\Range\RangeInterface::getStartAddress()
      */
     public function getStartAddress()
     {
@@ -145,7 +147,7 @@ class Single implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getEndAddress()
+     * @see \IPLib\Range\RangeInterface::getEndAddress()
      */
     public function getEndAddress()
     {
@@ -155,7 +157,7 @@ class Single implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getComparableStartString()
+     * @see \IPLib\Range\RangeInterface::getComparableStartString()
      */
     public function getComparableStartString()
     {
@@ -165,10 +167,24 @@ class Single implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getComparableEndString()
+     * @see \IPLib\Range\RangeInterface::getComparableEndString()
      */
     public function getComparableEndString()
     {
         return $this->address->getComparableString();
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @see \IPLib\Range\RangeInterface::getSubnetMask()
+     */
+    public function getSubnetMask()
+    {
+        if ($this->getAddressType() !== AddressType::T_IPv4) {
+            return null;
+        }
+
+        return IPv4::fromBytes(array(255, 255, 255, 255));
     }
 }

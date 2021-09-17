@@ -19,14 +19,14 @@ class Pattern implements RangeInterface
     /**
      * Starting address of the range.
      *
-     * @var AddressInterface
+     * @var \IPLib\Address\AddressInterface
      */
     protected $fromAddress;
 
     /**
      * Final address of the range.
      *
-     * @var AddressInterface
+     * @var \IPLib\Address\AddressInterface
      */
     protected $toAddress;
 
@@ -47,8 +47,8 @@ class Pattern implements RangeInterface
     /**
      * Initializes the instance.
      *
-     * @param AddressInterface $fromAddress
-     * @param AddressInterface $toAddress
+     * @param \IPLib\Address\AddressInterface $fromAddress
+     * @param \IPLib\Address\AddressInterface $toAddress
      * @param int $asterisksCount
      */
     public function __construct(AddressInterface $fromAddress, AddressInterface $toAddress, $asterisksCount)
@@ -69,10 +69,18 @@ class Pattern implements RangeInterface
     {
         $result = null;
         if (is_string($range) && strpos($range, '*') !== false) {
+            $matches = null;
             if ($range === '*.*.*.*') {
                 $result = new static(IPv4::fromString('0.0.0.0'), IPv4::fromString('255.255.255.255'), 4);
             } elseif (strpos($range, '.') !== false && preg_match('/^[^*]+((?:\.\*)+)$/', $range, $matches)) {
                 $asterisksCount = strlen($matches[1]) >> 1;
+                if ($asterisksCount > 0) {
+                    $missingDots = 3 - substr_count($range, '.');
+                    if ($missingDots > 0) {
+                        $range .= str_repeat('.*', $missingDots);
+                        $asterisksCount += $missingDots;
+                    }
+                }
                 $fromAddress = IPv4::fromString(str_replace('*', '0', $range));
                 if ($fromAddress !== null) {
                     $fixedBytes = array_slice($fromAddress->getBytes(), 0, -$asterisksCount);
@@ -104,6 +112,9 @@ class Pattern implements RangeInterface
      */
     public function toString($long = false)
     {
+        if ($this->asterisksCount === 0) {
+            return $this->fromAddress->toString($long);
+        }
         switch (true) {
             case $this->fromAddress instanceof \IPLib\Address\IPv4:
                 $chunks = explode('.', $this->fromAddress->toString());
@@ -117,12 +128,15 @@ class Pattern implements RangeInterface
                     $chunks = array_slice($chunks, 0, -$this->asterisksCount);
                     $chunks = array_pad($chunks, 8, '*');
                     $result = implode(':', $chunks);
+                } elseif ($this->asterisksCount === 8) {
+                    $result = '*:*:*:*:*:*:*:*';
                 } else {
-                    $chunks = explode(':', $this->toAddress->toString(false));
-                    $chunkCount = count($chunks);
-                    $chunks = array_slice($chunks, 0, -$this->asterisksCount);
-                    $chunks = array_pad($chunks, $chunkCount, '*');
-                    $result = implode(':', $chunks);
+                    $bytes = $this->toAddress->getBytes();
+                    $bytes = array_slice($bytes, 0, -$this->asterisksCount * 2);
+                    $bytes = array_pad($bytes, 16, 1);
+                    $address = IPv6::fromBytes($bytes);
+                    $before = substr($address->toString(false), 0, -strlen(':101') * $this->asterisksCount);
+                    $result = $before.str_repeat(':*', $this->asterisksCount);
                 }
                 break;
             default:
@@ -135,7 +149,7 @@ class Pattern implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::__toString()
+     * @see \IPLib\Range\RangeInterface::__toString()
      */
     public function __toString()
     {
@@ -145,7 +159,7 @@ class Pattern implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getAddressType()
+     * @see \IPLib\Range\RangeInterface::getAddressType()
      */
     public function getAddressType()
     {
@@ -155,7 +169,7 @@ class Pattern implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getRangeType()
+     * @see \IPLib\Range\RangeInterface::getRangeType()
      */
     public function getRangeType()
     {
@@ -193,7 +207,7 @@ class Pattern implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::contains()
+     * @see \IPLib\Range\RangeInterface::contains()
      */
     public function contains(AddressInterface $address)
     {
@@ -215,7 +229,7 @@ class Pattern implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::containsRange()
+     * @see \IPLib\Range\RangeInterface::containsRange()
      */
     public function containsRange(RangeInterface $range)
     {
@@ -238,7 +252,7 @@ class Pattern implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getStartAddress()
+     * @see \IPLib\Range\RangeInterface::getStartAddress()
      */
     public function getStartAddress()
     {
@@ -248,7 +262,7 @@ class Pattern implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getEndAddress()
+     * @see \IPLib\Range\RangeInterface::getEndAddress()
      */
     public function getEndAddress()
     {
@@ -258,7 +272,7 @@ class Pattern implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getComparableStartString()
+     * @see \IPLib\Range\RangeInterface::getComparableStartString()
      */
     public function getComparableStartString()
     {
@@ -268,10 +282,50 @@ class Pattern implements RangeInterface
     /**
      * {@inheritdoc}
      *
-     * @see RangeInterface::getComparableEndString()
+     * @see \IPLib\Range\RangeInterface::getComparableEndString()
      */
     public function getComparableEndString()
     {
         return $this->toAddress->getComparableString();
+    }
+
+    /**
+     * Get the subnet/CIDR representation of this range.
+     *
+     * @return \IPLib\Range\Subnet
+     */
+    public function asSubnet()
+    {
+        switch ($this->getAddressType()) {
+            case AddressType::T_IPv4:
+                return new Subnet($this->getStartAddress(), $this->getEndAddress(), 8 * (4 - $this->asterisksCount));
+            case AddressType::T_IPv6:
+                return new Subnet($this->getStartAddress(), $this->getEndAddress(), 16 * (8 - $this->asterisksCount));
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @see \IPLib\Range\RangeInterface::getSubnetMask()
+     */
+    public function getSubnetMask()
+    {
+        if ($this->getAddressType() !== AddressType::T_IPv4) {
+            return null;
+        }
+        switch ($this->asterisksCount) {
+            case 0:
+                $bytes = array(255, 255, 255, 255);
+                break;
+            case 4:
+                $bytes = array(0, 0, 0, 0);
+                break;
+            default:
+                $bytes = array_pad(array_fill(0, 4 - $this->asterisksCount, 255), 4, 0);
+                break;
+        }
+
+        return IPv4::fromBytes($bytes);
     }
 }

@@ -2,7 +2,7 @@
 defined('C5_EXECUTE') or die("Access Denied.");
 $form = Core::make('helper/form');
 $val = Core::make('token');
-$u = new User();
+$u = Core::make(Concrete\Core\User\User::class);
 ?>
 
 <?php if ($displayForm && $displayPostingForm == $position) {
@@ -19,10 +19,8 @@ $u = new User();
     ?>
 		<div class="ccm-conversation-add-new-message" rel="main-reply-form">
 			<form method="post" class="main-reply-form">
-				<div class="col-sm-7">
-				
-				<?php Loader::element('conversation/message/author'); ?>
-					
+				<?php Loader::element('conversation/message/author');
+    ?>
 				<div class="ccm-conversation-message-form">
 					<div class="ccm-conversation-errors alert alert-danger"></div>
 					<?php $editor->outputConversationEditorAddMessageForm();
@@ -34,7 +32,7 @@ $u = new User();
 					<?php echo $form->hidden('blockAreaHandle', $blockAreaHandle) ?>
 					<?php echo $form->hidden('cID', $cID) ?>
 					<?php echo $form->hidden('bID', $bID) ?>
-					<button type="button" data-post-parent-id="0" data-submit="conversation-message" class="pull-right btn btn-submit btn-secondary"><?=t('Submit')?></button>
+					<button type="button" data-post-parent-id="0" data-submit="conversation-message" class="pull-right btn btn-submit btn-primary"><?=t('Submit')?></button>
 					<?php if ($attachmentsEnabled) {
     ?>
 						<button type="button" class="pull-right btn btn-default ccm-conversation-attachment-toggle" href="#" title="<?php echo t('Attach Files');
@@ -55,7 +53,6 @@ $u = new User();
 					<?php
 }
     ?>
-				</div>
 				</div>
 			</form>
 			<?php if ($attachmentsEnabled) {

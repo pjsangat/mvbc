@@ -22,10 +22,16 @@ class CsvWriter
      */
     protected $dateFormatter;
 
-    public function __construct(Writer $writer, Date $dateFormatter)
+    /**
+     * @var string
+     */
+    private $datetime_format;
+
+    public function __construct(Writer $writer, Date $dateFormatter, $datetime_format = 'ATOM' )
     {
         $this->writer = $writer;
         $this->dateFormatter = $dateFormatter;
+        $this->datetime_format = $datetime_format;
     }
 
     public function insertHeaders(Entity $entity)
@@ -50,13 +56,32 @@ class CsvWriter
      */
     private function projectList(EntryList $list)
     {
+        $headers = array_keys(iterator_to_array($this->getHeaders($list->getEntity())));
         $statement = $list->deliverQueryObject()->execute();
 
         foreach ($statement as $result) {
             if ($entry = $list->getResult($result)) {
-                yield iterator_to_array($this->projectEntry($entry));
+                yield $this->orderedEntry(iterator_to_array($this->projectEntry($entry)), $headers);
             }
         }
+    }
+
+    /**
+     * Return an entry in proper order
+     * @param array $entry
+     * @param array $headerKeys
+     *
+     * @return array
+     */
+    private function orderedEntry(array $entry, array $headerKeys)
+    {
+        $result = [];
+
+        foreach ($headerKeys as $key) {
+            $result[$key] = $entry[$key];
+        }
+
+        return $result;
     }
 
     /**
@@ -68,13 +93,35 @@ class CsvWriter
     {
         $date = $entry->getDateCreated();
         if ($date) {
-            yield $this->dateFormatter->formatCustom(\DateTime::ATOM, $date);
+            yield 'ccm_date_created' => $this->dateFormatter->formatCustom($this->datetime_format, $date);
+        } else {
+            yield 'ccm_date_created' => null;
+        }
+        yield 'publicIdentifier' => $entry->getPublicIdentifier();
+
+        $author = $entry->getAuthor();
+        if ($author) {
+            yield 'author_name' => $author->getUserInfoObject()->getUserDisplayName();
+        } else {
+            yield 'author_name' => null;
         }
 
         $attributes = $entry->getAttributes();
         foreach ($attributes as $attribute) {
-            yield $attribute->getPlainTextValue();
+            yield $attribute->getAttributeKey()->getAttributeKeyHandle() => $attribute->getPlainTextValue();
         }
+
+        $associations = $entry->getAssociations();
+        foreach ($associations as $association) {
+            $output = [];
+            if ($collection = $association->getSelectedEntries()) {
+                foreach($collection as $entry) {
+                    $output[] = $entry->getPublicIdentifier();
+                }
+            }
+            yield $association->getAssociation()->getId() => implode('|', $output);
+        }
+
     }
 
     /**
@@ -84,11 +131,18 @@ class CsvWriter
      */
     private function getHeaders(Entity $entity)
     {
-        yield 'dateCreated';
+        yield 'publicIdentifier' => 'publicIdentifier';
+        yield 'ccm_date_created' => 'dateCreated';
+        yield 'author_name' => 'authorName';
 
         $attributes = $entity->getAttributes();
         foreach ($attributes as $attribute) {
-            yield $attribute->getAttributeKeyDisplayName();
+            yield $attribute->getAttributeKeyHandle() => $attribute->getAttributeKeyDisplayName();
+        }
+
+        $associations = $entity->getAssociations();
+        foreach ($associations as $association) {
+            yield $association->getId() => $association->getTargetPropertyName();
         }
     }
 

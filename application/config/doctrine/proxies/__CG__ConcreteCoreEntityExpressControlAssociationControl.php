@@ -64,10 +64,10 @@ class AssociationControl extends \Concrete\Core\Entity\Express\Control\Associati
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return ['__isInitialized__', 'association', 'association_entity_label_mask', 'id', 'is_required', 'position', 'custom_label', 'field_set'];
+            return ['__isInitialized__', 'association', 'association_entity_label_mask', 'entry_selector_mode', 'enable_entry_reordering', 'id', 'is_required', 'position', 'custom_label', 'field_set'];
         }
 
-        return ['__isInitialized__', 'association', 'association_entity_label_mask', 'id', 'is_required', 'position', 'custom_label', 'field_set'];
+        return ['__isInitialized__', 'association', 'association_entity_label_mask', 'entry_selector_mode', 'enable_entry_reordering', 'id', 'is_required', 'position', 'custom_label', 'field_set'];
     }
 
     /**
@@ -209,6 +209,28 @@ class AssociationControl extends \Concrete\Core\Entity\Express\Control\Associati
     /**
      * {@inheritDoc}
      */
+    public function getEntrySelectorMode()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getEntrySelectorMode', []);
+
+        return parent::getEntrySelectorMode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setEntrySelectorMode($entry_selector_mode)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setEntrySelectorMode', [$entry_selector_mode]);
+
+        return parent::setEntrySelectorMode($entry_selector_mode);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getAssociation()
     {
 
@@ -270,6 +292,28 @@ class AssociationControl extends \Concrete\Core\Entity\Express\Control\Associati
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getExporter', []);
 
         return parent::getExporter();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function enableEntryReordering()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'enableEntryReordering', []);
+
+        return parent::enableEntryReordering();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setEnableEntryReordering($enable_entry_reordering)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setEnableEntryReordering', [$enable_entry_reordering]);
+
+        return parent::setEnableEntryReordering($enable_entry_reordering);
     }
 
     /**

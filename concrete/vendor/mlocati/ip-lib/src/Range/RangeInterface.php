@@ -44,7 +44,7 @@ interface RangeInterface
     /**
      * Check if this range contains an IP address.
      *
-     * @param AddressInterface $address
+     * @param \IPLib\Address\AddressInterface $address
      *
      * @return bool
      */
@@ -53,7 +53,7 @@ interface RangeInterface
     /**
      * Check if this range contains another range.
      *
-     * @param RangeInterface $address
+     * @param \IPLib\Range\RangeInterface $range
      *
      * @return bool
      */
@@ -62,14 +62,14 @@ interface RangeInterface
     /**
      * Get the initial address contained in this range.
      *
-     * @return AddressInterface
+     * @return \IPLib\Address\AddressInterface
      */
     public function getStartAddress();
 
     /**
      * Get the final address contained in this range.
      *
-     * @return AddressInterface
+     * @return \IPLib\Address\AddressInterface
      */
     public function getEndAddress();
 
@@ -86,4 +86,11 @@ interface RangeInterface
      * @return string
      */
     public function getComparableEndString();
+
+    /**
+     * Get the subnet mask representing this range (only for IPv4 ranges).
+     *
+     * @return \IPLib\Address\IPv4|null return NULL if the range is an IPv6 range, the subnet mask otherwise
+     */
+    public function getSubnetMask();
 }
